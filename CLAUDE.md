@@ -29,6 +29,7 @@ macro-regime-dashboard/
 ├── README.md
 ├── requirements.txt
 ├── .env.example            # nombres de las variables, nunca valores reales
+├── pyproject.toml          # configuración de ruff y pytest
 ├── .github/workflows/
 │   ├── ingest.yml          # ingesta programada
 │   └── ci.yml              # ruff + pytest en cada push
@@ -36,6 +37,7 @@ macro-regime-dashboard/
 │   ├── config.py           # catálogo de series y variables de entorno
 │   ├── db.py               # conexión, creación de tablas y upsert
 │   ├── ingest/
+│   │   ├── http.py         # sesión con timeout y reintentos, común a todas las fuentes
 │   │   ├── fred.py
 │   │   ├── ecb.py
 │   │   ├── ine.py
@@ -65,7 +67,8 @@ La clave es (`series_id`, `date`) y la escritura se hace con upsert.
 
 **`date` y `available_at` no se mezclan nunca.** Cualquier señal o backtest filtra por `available_at` para evitar el look-ahead bias:
 
-- **FRED:** usa `realtime_start` de la API (vintages de ALFRED) cuando se necesite el histórico real.
+- **FRED, series mensuales:** `value` es la vintage actual y `available_at` es la fecha de la primera publicación (`realtime_start` con `output_type=4` de ALFRED). Para fechas anteriores a las vintages se usa `publication_lag_days`. El look-ahead residual está medido: el IPC sin desestacionalizar casi no se revisa (subyacente: 3,4 % de los valores, máximo 0,2 puntos del índice).
+- **FRED, series diarias** (tipos, 5y5y): tienen miles de vintages y no se revisan, así que `available_at` = fecha + `publication_lag_days` días hábiles.
 - **BCE e INE:** desde hoy, `available_at = retrieved_at`. Para el histórico se aplica un retraso de publicación conservador por serie (`publication_lag_days`), documentado en `config.py` con su fuente.
 
 ## Fuentes de datos (fase 1)
@@ -74,7 +77,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 
 **FRED** (`https://api.stlouisfed.org/fred/`). Requiere `FRED_API_KEY`, que es gratuita.
 - Tipos y curva: `DGS3MO`, `DGS2`, `DGS10`, `T10Y2Y`, `T10Y3M`
-- Inflación: `CPIAUCSL` (general) y `CPILFESL` (subyacente). Son índices, así que la tasa interanual se calcula en `transform/`.
+- Inflación: `CPIAUCNS` (general) y `CPILFENS` (subyacente), **sin desestacionalizar**. La tasa interanual no lo necesita y es la cifra oficial de la BLS. Las versiones desestacionalizadas (`CPIAUCSL`, `CPILFESL`) se descartaron porque el 88–91 % de su histórico se ha revisado. Son índices, así que la tasa interanual se calcula en `transform/`.
 - Expectativas de inflación: `T5YIFR` (5y5y forward)
 
 **BCE Data Portal** (`https://data-api.ecb.europa.eu/service/data/{flow}/{key}?format=csvdata`). No requiere clave.
