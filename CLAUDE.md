@@ -119,11 +119,11 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 
 ### Fase 1: bonos e inflación, desplegado (EN CURSO)
 
-- [ ] Esqueleto del repo: `requirements.txt`, `.gitignore`, `.env.example`, ruff, pytest y `ci.yml`
-- [ ] `db.py`: tablas `series` y `observations` con upsert
-- [ ] Ingesta FRED con tests
-- [ ] Ingesta BCE con tests
-- [ ] Ingesta INE con tests
+- [x] Esqueleto del repo: `requirements.txt`, `.gitignore`, `.env.example`, ruff, pytest y `ci.yml`
+- [x] `db.py`: tablas `series` y `observations` con upsert
+- [x] Ingesta FRED con tests
+- [x] Ingesta BCE con tests
+- [x] Ingesta INE con tests
 - [ ] `run.py` con el resumen final
 - [ ] Transformaciones: tasas interanuales, spreads 10Y-2Y y 10Y-3M de EE. UU., pendiente de la curva euro y prima de riesgo ES-DE
 - [ ] Página *Rates & Bonds* del dashboard:
