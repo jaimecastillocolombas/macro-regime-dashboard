@@ -70,7 +70,7 @@ La clave es (`series_id`, `date`) y la escritura se hace con upsert.
 
 - **FRED, series mensuales:** `value` es la vintage actual y `available_at` es la fecha de la primera publicación (`realtime_start` con `output_type=4` de ALFRED). Para fechas anteriores a las vintages se usa `publication_lag_days`. El look-ahead residual está medido: el IPC sin desestacionalizar casi no se revisa (subyacente: 3,4 % de los valores, máximo 0,2 puntos del índice).
 - **FRED, series diarias** (tipos, 5y5y): tienen miles de vintages y no se revisan, así que `available_at` = fecha + `publication_lag_days` días hábiles.
-- **BCE e INE:** desde hoy, `available_at = retrieved_at`. Para el histórico se aplica un retraso de publicación conservador por serie (`publication_lag_days`), documentado en `config.py` con su fuente.
+- **BCE e INE:** no guardan historial de publicaciones, así que `available_at = min(fecha + publication_lag_days, día de descarga)`. El histórico recibe el retraso conservador (documentado en `config.py` con su fuente) y, desde la primera ingesta programada, los datos nuevos reciben el día en que se vieron. Las series diarias del BCE usan días hábiles del calendario TARGET2.
 
 ## Fuentes de datos (fase 1)
 
@@ -83,8 +83,10 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 
 **BCE Data Portal** (`https://data-api.ecb.europa.eu/service/data/{flow}/{key}?format=csvdata`). No requiere clave.
 - Curva AAA de la zona euro: dataset `YC`, por ejemplo `YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y`, con plazos de 3M a 30Y. Se publica cada día hábil hacia las 12:00 CET.
-- IPCA de la zona euro: `ICP/M.U2.N.000000.4.ANR` (general) y `ICP/M.U2.N.XEF000.4.ANR` (subyacente)
-- IPCA de España: `ICP/M.ES.N.000000.4.ANR`
+- IPCA de la zona euro: `HICP/M.U2.N.000000.4D0.ANR` (general) y `HICP/M.U2.N.XEF000.4D0.ANR` (subyacente)
+- IPCA de España: `HICP/M.ES.N.000000.4D0.ANR`
+- El dataset antiguo `ICP` está congelado desde diciembre de 2025; el IPCA se publica ahora en `HICP` con proveedor `4D0`.
+- El cortafuegos del portal bloquea ráfagas de peticiones y consultas con comodines (página HTML con código 400): se pide una serie cada vez, con pausa entre peticiones.
 - Facilidad de depósito: `FM/D.U2.EUR.4F.KR.DFR.LEV`
 - Prima de riesgo España-Alemania (mensual): tipos a largo plazo del dataset `IRS` para ES y DE
 
