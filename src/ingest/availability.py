@@ -4,7 +4,7 @@ Daily series move by business days of the publisher's calendar; monthly series m
 calendar days. An observation is never marked available before its own reference date.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 import numpy as np
@@ -70,16 +70,21 @@ def build_rows(
     values: pd.Series,
     retrieved_at: datetime,
     first_release: pd.Series | None = None,
+    seen_on: date | None = None,
 ) -> list[dict[str, Any]]:
     """Rows for the ``observations`` table.
 
-    Where a first-release date exists it wins; otherwise the lag rule applies. An observation is
-    never marked available before its own reference date.
+    ``available_at`` is the first-release date where the source documents one, otherwise the
+    fixed lag of the series. ``seen_on`` (the day we downloaded the data) caps it: a value we
+    already hold was public that day at the latest, even if the conservative lag says later.
+    An observation is never marked available before its own reference date.
     """
     available = available_at_with_lag(values.index, spec)
     if first_release is not None:
         known = first_release.reindex(values.index).dropna()
         available.loc[known.index] = known
+    if seen_on is not None:
+        available = available.clip(upper=pd.Timestamp(seen_on))
     available = available.where(available >= values.index, values.index)
     return [
         {
