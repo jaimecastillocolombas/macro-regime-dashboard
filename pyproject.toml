@@ -13,4 +13,5 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]  # import `src` the same way under `pytest` and `python -m pytest`
 addopts = "-ra"
