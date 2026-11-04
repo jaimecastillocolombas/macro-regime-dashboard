@@ -38,6 +38,7 @@ macro-regime-dashboard/
 │   ├── db.py               # conexión, creación de tablas y upsert
 │   ├── ingest/
 │   │   ├── http.py         # sesión con timeout y reintentos, común a todas las fuentes
+│   │   ├── availability.py # available_at: retrasos y calendarios de festivos por fuente
 │   │   ├── fred.py
 │   │   ├── ecb.py
 │   │   ├── ine.py

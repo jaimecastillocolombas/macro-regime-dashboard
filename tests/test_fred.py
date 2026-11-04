@@ -10,7 +10,8 @@ from sqlalchemy import func, select
 
 from src.config import FRED_SERIES
 from src.db import get_engine, observations
-from src.ingest.fred import build_rows, ingest_series, parse_first_release, parse_values
+from src.ingest.availability import build_rows
+from src.ingest.fred import ingest_series, parse_first_release, parse_values
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SPECS = {s.series_id: s for s in FRED_SERIES}

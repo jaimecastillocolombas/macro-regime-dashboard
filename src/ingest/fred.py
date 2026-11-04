@@ -11,14 +11,13 @@
 from datetime import UTC, datetime
 from typing import Any
 
-import numpy as np
 import pandas as pd
 import requests
-from pandas.tseries.holiday import USFederalHolidayCalendar
 from sqlalchemy import Engine
 
 from src.config import SeriesSpec
 from src.db import UpsertResult, upsert_observations, upsert_series
+from src.ingest.availability import build_rows
 from src.ingest.http import DEFAULT_TIMEOUT
 
 BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
@@ -64,61 +63,6 @@ def parse_first_release(payload: dict[str, Any]) -> pd.Series:
         index=pd.to_datetime([o["date"] for o in obs]),
         name="available_at",
     )
-
-
-def add_us_business_days(dates: pd.DatetimeIndex, n: int) -> pd.DatetimeIndex:
-    """Vectorised ``dates + n`` business days, skipping weekends and US federal holidays."""
-    if dates.empty:
-        return dates
-    holidays = USFederalHolidayCalendar().holidays(dates.min(), dates.max() + pd.Timedelta(days=30))
-    shifted = np.busday_offset(
-        dates.values.astype("datetime64[D]"),
-        n,
-        roll="forward",
-        holidays=holidays.values.astype("datetime64[D]"),
-    )
-    return pd.DatetimeIndex(shifted)
-
-
-def available_at_with_lag(dates: pd.DatetimeIndex, spec: SeriesSpec) -> pd.Series:
-    """Conservative availability from a fixed lag.
-
-    Daily series move by business days, skipping US federal holidays (the Dec 24 yield is
-    published on Dec 26, not on Christmas). Monthly series move by calendar days.
-    """
-    if spec.frequency == "daily":
-        shifted = add_us_business_days(dates, spec.publication_lag_days)
-    else:
-        shifted = dates + pd.Timedelta(days=spec.publication_lag_days)
-    return pd.Series(shifted, index=dates, name="available_at")
-
-
-def build_rows(
-    spec: SeriesSpec,
-    values: pd.Series,
-    retrieved_at: datetime,
-    first_release: pd.Series | None = None,
-) -> list[dict[str, Any]]:
-    """Rows for the ``observations`` table.
-
-    Where a first-release date exists it wins; otherwise the lag rule applies. An observation is
-    never marked available before its own reference date.
-    """
-    available = available_at_with_lag(values.index, spec)
-    if first_release is not None:
-        known = first_release.reindex(values.index).dropna()
-        available.loc[known.index] = known
-    available = available.where(available >= values.index, values.index)
-    return [
-        {
-            "series_id": spec.series_id,
-            "date": ref.date(),
-            "value": float(values[ref]),
-            "available_at": available[ref].date(),
-            "retrieved_at": retrieved_at,
-        }
-        for ref in values.index
-    ]
 
 
 # ----------------------------------------------------------------------------- orchestration
