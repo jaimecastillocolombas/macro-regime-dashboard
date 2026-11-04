@@ -18,7 +18,7 @@ from sqlalchemy import Engine
 from src.config import SeriesSpec
 from src.db import UpsertResult, upsert_observations, upsert_series
 from src.ingest.availability import build_rows
-from src.ingest.http import DEFAULT_TIMEOUT
+from src.ingest.http import DEFAULT_TIMEOUT, redact
 
 BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 ALL_TIME = {
@@ -28,16 +28,25 @@ ALL_TIME = {
 MISSING = "."  # FRED's marker for a missing value
 
 
+class FredRequestError(RuntimeError):
+    """A failed FRED request, with the API key removed from the message."""
+
+
 # ----------------------------------------------------------------------------- network
 
 
 def fetch_observations(
     session: requests.Session, series_id: str, api_key: str, **params: Any
 ) -> dict[str, Any]:
-    """Raw JSON from /fred/series/observations. Raises on HTTP errors."""
+    """Raw JSON from /fred/series/observations. Raises ``FredRequestError`` on failure."""
     query = {"series_id": series_id, "api_key": api_key, "file_type": "json", **params}
-    response = session.get(BASE_URL, params=query, timeout=DEFAULT_TIMEOUT)
-    response.raise_for_status()
+    try:
+        response = session.get(BASE_URL, params=query, timeout=DEFAULT_TIMEOUT)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        # requests puts the full URL, key included, in its messages: re-raise without it and
+        # without the original exception attached (``from None``), or the traceback shows it
+        raise FredRequestError(f"{series_id}: {redact(str(exc))}") from None
     return response.json()
 
 
