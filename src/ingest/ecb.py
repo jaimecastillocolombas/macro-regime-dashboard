@@ -6,7 +6,6 @@ scheduled run on, new values get the day they were actually seen.
 """
 
 import io
-import time
 from datetime import UTC, datetime
 
 import pandas as pd
@@ -58,15 +57,3 @@ def ingest_series(
     rows = build_rows(spec, values, retrieved_at, seen_on=retrieved_at.date())
     upsert_series(engine, [spec.metadata_row()])
     return upsert_observations(engine, rows)
-
-
-def ingest_all(
-    engine: Engine, session: requests.Session, specs: tuple[SeriesSpec, ...]
-) -> dict[str, UpsertResult]:
-    """Ingest series one after another, pausing between requests to stay under the firewall."""
-    results = {}
-    for i, spec in enumerate(specs):
-        if i:
-            time.sleep(PAUSE_SECONDS)
-        results[spec.series_id] = ingest_series(engine, session, spec)
-    return results

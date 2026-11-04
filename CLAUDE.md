@@ -42,7 +42,7 @@ macro-regime-dashboard/
 │   │   ├── fred.py
 │   │   ├── ecb.py
 │   │   ├── ine.py
-│   │   └── run.py          # punto de entrada del pipeline
+│   │   └── run.py          # punto de entrada: `python -m src.ingest.run`
 │   ├── transform/          # spreads, tasas interanuales, prima de riesgo
 │   └── strategy/           # fase 3
 ├── app/
@@ -124,7 +124,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 - [x] Ingesta FRED con tests
 - [x] Ingesta BCE con tests
 - [x] Ingesta INE con tests
-- [ ] `run.py` con el resumen final
+- [x] `run.py` con el resumen final
 - [ ] Transformaciones: tasas interanuales, spreads 10Y-2Y y 10Y-3M de EE. UU., pendiente de la curva euro y prima de riesgo ES-DE
 - [ ] Página *Rates & Bonds* del dashboard:
   - curva actual frente a hace 1 mes y 1 año (EE. UU. y euro)
