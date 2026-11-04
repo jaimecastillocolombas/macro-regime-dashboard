@@ -195,3 +195,35 @@ ECB_SERIES: tuple[SeriesSpec, ...] = (
         _IRS,
     ),
 )
+
+
+_INE_CPI = (
+    "INE final CPI release around the 12th-15th of the next month (its month-end flash is "
+    "captured by the download-day cap); 50 days from the month start is conservative."
+)
+
+# Base 2025 series (classification 120). The base 2021 codes (IPC251856...) stop at Dec-2025.
+INE_SERIES: tuple[SeriesSpec, ...] = (
+    SeriesSpec(
+        "ES_CPI",
+        "INE",
+        "Spain CPI, all items",
+        "percent y/y",
+        "monthly",
+        "ES",
+        50,
+        _INE_CPI,
+        "IPC290750",
+    ),
+    SeriesSpec(
+        "ES_CPI_CORE",
+        "INE",
+        "Spain core CPI (excl. unprocessed food and energy)",
+        "percent y/y",
+        "monthly",
+        "ES",
+        50,
+        _INE_CPI,
+        "IPC292510",
+    ),
+)

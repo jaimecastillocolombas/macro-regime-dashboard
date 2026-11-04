@@ -90,7 +90,12 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 - Facilidad de depósito: `FM/D.U2.EUR.4F.KR.DFR.LEV`
 - Prima de riesgo España-Alemania (mensual): tipos a largo plazo del dataset `IRS` para ES y DE
 
-**INE** (API JSON en `servicios.ine.es/wstempus/js/ES/`). Usa el IPC general y el subyacente de España, tasa anual. Localiza los códigos de tabla o serie y documéntalos en `config.py`.
+**INE** (API JSON en `servicios.ine.es/wstempus/js/ES/`). IPC de España en tasa anual, base 2025:
+- General: `IPC290750`; subyacente (sin alimentos no elaborados ni productos energéticos): `IPC292510`.
+- Los códigos de la base 2021 (`IPC251856`...) están congelados desde diciembre de 2025.
+- El periodo se construye con `Anyo` y `FK_Periodo`: `Fecha` es un epoch en hora de Madrid y falta antes de 1970.
+- El último mes suele ser el dato adelantado (`FK_TipoDato` 3). Si el definitivo difiere, el upsert lo trata como revisión.
+- Un código inexistente devuelve HTTP 200 con el cuerpo vacío, y se trata como error.
 
 ## Reglas de ingeniería
 

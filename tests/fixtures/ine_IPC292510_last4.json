@@ -1,0 +1,6 @@
+{"COD":"IPC292510", "Nombre":"Nacional. Subyacente: General sin alimentos no elaborados ni productos energéticos. Variación anual. ", "FK_Unidad":135, "FK_Escala":1, "Data":[{"Fecha":1782856800000, "FK_TipoDato":1, "FK_Periodo":7, "Anyo":2026, "Valor":3.0, "Secreto":false}
+,{"Fecha":1785535200000, "FK_TipoDato":1, "FK_Periodo":8, "Anyo":2026, "Valor":2.9, "Secreto":false}
+,{"Fecha":1788213600000, "FK_TipoDato":1, "FK_Periodo":9, "Anyo":2026, "Valor":3.1, "Secreto":false}
+,{"Fecha":1790805600000, "FK_TipoDato":3, "FK_Periodo":10, "Anyo":2026, "Valor":3.1, "Secreto":false}
+]
+}
