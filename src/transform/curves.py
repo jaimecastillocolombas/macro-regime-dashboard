@@ -28,3 +28,13 @@ def runs_below(
     below = values < threshold
     run_id = (below != below.shift()).cumsum()
     return [(run.index[0], run.index[-1]) for _, run in values[below].groupby(run_id[below])]
+
+
+def curve_change(latest: pd.DataFrame, earlier: pd.DataFrame) -> pd.DataFrame:
+    """Move of each tenor between two ``curve_on`` snapshots, in basis points.
+
+    Only tenors present in both snapshots are compared.
+    """
+    both = latest.merge(earlier, on=["tenor", "years"], suffixes=("_latest", "_earlier"))
+    both["change_bp"] = (both["value_latest"] - both["value_earlier"]) * 100
+    return both[["tenor", "years", "change_bp"]]

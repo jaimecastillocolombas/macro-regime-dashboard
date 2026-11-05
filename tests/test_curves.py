@@ -1,8 +1,9 @@
 """Yield-curve helper tests on hand-made series."""
 
 import pandas as pd
+import pytest
 
-from src.transform.curves import curve_on, runs_below
+from src.transform.curves import curve_change, curve_on, runs_below
 
 T = pd.Timestamp
 
@@ -43,3 +44,16 @@ def test_runs_below_zero() -> None:
 
 def test_no_runs_when_never_below() -> None:
     assert runs_below(daily({"2026-01-01": 0.5})["value"]) == []
+
+
+def test_curve_change_in_basis_points_on_common_tenors() -> None:
+    stored = {
+        "S2Y": daily({"2025-11-03": 3.60, "2026-11-03": 4.61}),
+        "S30Y": daily({"2026-11-03": 5.33}),  # no 30Y a year earlier in this toy data
+    }
+    curve = {"2Y": "S2Y", "30Y": "S30Y"}
+    change = curve_change(
+        curve_on(stored, curve, T("2026-11-03")), curve_on(stored, curve, T("2025-11-03"))
+    )
+    assert list(change["tenor"]) == ["2Y"]
+    assert change["change_bp"].iloc[0] == pytest.approx(101)
