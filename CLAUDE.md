@@ -204,16 +204,20 @@ ruff check . && ruff format .         # lint y formato
 - **Secretos** (nunca en git, nunca en el chat):
   - GitHub Actions: `FRED_API_KEY`, `DATABASE_URL`.
   - Streamlit Cloud (Manage app > Settings > Secrets): `DATABASE_URL`, `FINNHUB_API_KEY`.
-  - Local: `.env` (`FRED_API_KEY`, `FINNHUB_API_KEY`, `DATABASE_URL=sqlite:///data/macro.db`) y `.env.production` (`MACRO_APP_PASSWORD`, `DATABASE_URL` de Supabase). Ambos ignorados por git; se pasan de una máquina a otra por USB.
+  - Local: `.env` (`FRED_API_KEY`, `FINNHUB_API_KEY`, `DATABASE_URL=sqlite:///data/macro.db`) y, solo en la máquina que administre producción, `.env.production` (`MACRO_APP_PASSWORD`, `DATABASE_URL` de Supabase). Ambos ignorados por git.
+  - Los secretos no se copian entre máquinas: en una máquina nueva se vuelven a obtener (ver abajo).
 
 ### Puesta en marcha en una máquina nueva (lo hace Claude Code)
 
 1. Comprobar que existen Python 3.11 (`py -3.11 --version`), Git y GitHub CLI (`gh auth status`). Si falta algo, decirle a Jaime qué instalar; no instalar nada a nivel de sistema sin preguntar. Para empujar cambios en `.github/workflows/`, el token de `gh` necesita el permiso `workflow` (`gh auth refresh -h github.com -s workflow`, lo ejecuta Jaime).
 2. Crear el entorno: `py -3.11 -m venv .venv` y `.venv/Scripts/pip install -r requirements.txt`. Nunca instalar paquetes en el Python global.
-3. Copiar `.env` y `.env.production` desde la carpeta que traiga Jaime (USB) a la raíz del repo. Verificar sin imprimir valores: que las claves tienen el formato esperado (FRED: 32 caracteres hex en minúscula; Finnhub: 40 alfanuméricos) y **sin espacios** (en el portátil un espacio colado en la clave de FRED rompió la ingesta de GitHub).
+3. Crear `.env` copiando `.env.example` y abrirlo en el Bloc de notas para que Jaime pegue sus dos claves, que obtiene él mismo desde la torre:
+   - FRED: https://fredaccount.stlouisfed.org/apikeys (entrando con su cuenta).
+   - Finnhub: https://finnhub.io/dashboard.
+   Jaime no debe pegarlas en el chat. Después, verificar sin imprimir valores que tienen el formato esperado (FRED: 32 caracteres hex en minúscula; Finnhub: 40 alfanuméricos) y **sin espacios** (en el portátil un espacio colado en la clave de FRED rompió la ingesta de GitHub). Si hay espacios, quitarlos del fichero.
+   - `.env.production` no hace falta para desarrollar. Si hiciera falta administrar producción desde esta máquina, no copiarlo de otra: generar una contraseña nueva para `macro_app` en local, enviar a Supabase solo su hash SCRAM (`ALTER ROLE macro_app PASSWORD 'SCRAM-SHA-256$...'` con el conector de Supabase) y pedir a Jaime que actualice `DATABASE_URL` en los secrets de GitHub y de Streamlit.
 4. Verificar: `pytest` (61 tests en verde), `ruff check .` y `python -m src.ingest.run` (unos 6 minutos, carga `data/macro.db`; 45 series OK).
 5. Arrancar la app con `streamlit run app/streamlit_app.py` y comprobar las seis páginas.
-6. Opcional: generar `.streamlit/secrets.toml` a partir de `.env` y `.env.production` si Jaime quiere que la app local lea de Supabase.
 
 ### Lecciones aprendidas que no están en el código
 
