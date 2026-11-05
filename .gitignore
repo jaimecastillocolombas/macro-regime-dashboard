@@ -20,3 +20,7 @@ data/*.sqlite
 .idea/
 .DS_Store
 Thumbs.db
+
+# Production connection string (Supabase); never committed
+.env.*
+!.env.example

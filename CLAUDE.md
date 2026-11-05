@@ -16,6 +16,8 @@ Dashboard macroeconómico que se actualiza solo (tipos, bonos, inflación, merca
 
 - Python 3.11 o superior, pandas, requests
 - SQLAlchemy con `DATABASE_URL`: SQLite en local por defecto y Postgres (Supabase) en producción
+  - Producción: esquema `macro` dentro del proyecto Supabase `nevera` (el plan gratuito admite 2 proyectos y ya estaban ocupados). El rol `macro_app` solo puede usar ese esquema (`search_path=macro`, 5 conexiones como máximo) y no ve las tablas de `nevera`. Se conecta por el pooler (`aws-0-eu-central-1.pooler.supabase.com:5432`, usuario `macro_app.<ref>`) porque el host directo solo admite IPv6 y los runners de GitHub no lo tienen.
+  - La URL de producción vive en `.env.production` (ignorado por git), en el secret `DATABASE_URL` de GitHub y en los secrets de Streamlit Cloud. Solo se guarda su hash SCRAM en Supabase.
 - Streamlit + Plotly para el dashboard, desplegado en Streamlit Community Cloud
 - GitHub Actions (cron) para la ingesta programada
 - pytest, ruff (lint y formato) y python-dotenv
@@ -143,6 +145,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 - [ ] `ingest.yml`: cron diario en UTC, posterior a la publicación del BCE, más `workflow_dispatch` para lanzarlo a mano
 - [ ] Postgres en Supabase y despliegue en Streamlit Community Cloud
 - [ ] README v1: el problema, una captura, el enlace a la demo, un diagrama de arquitectura en Mermaid, las fuentes y cómo ejecutarlo en local
+- [ ] Página de inicio *Overview*, al final de la fase: solo los gráficos más importantes (inflación en España, bonos...), elegidos cuando estén todas las páginas
 
 La fase 1 está terminada cuando hay una demo pública que se actualiza sola cada día y un README que se entiende en 30 segundos.
 
@@ -176,5 +179,5 @@ ruff check . && ruff format .         # lint y formato
 ## Cosas a vigilar
 
 - GitHub desactiva los workflows programados de los repos públicos tras 60 días sin actividad. Hay que hacer algún commit de vez en cuando.
-- Comprueba que el plan gratuito de Supabase no pause el proyecto por inactividad.
+- El plan gratuito de Supabase pausa un proyecto tras una semana sin actividad; la ingesta diaria lo evita. GitHub desactiva los workflows programados tras 60 días sin commits en el repo: si eso ocurre, se reactiva a mano desde la pestaña Actions.
 - La app de Streamlit Community Cloud se duerme tras un tiempo sin visitas. Por eso el README lleva capturas, por si un reclutador la encuentra dormida.
