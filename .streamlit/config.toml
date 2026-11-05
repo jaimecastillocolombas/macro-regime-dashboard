@@ -15,9 +15,9 @@ paddingBottom = "1.5rem"
 [theme.light]
 primaryColor = "#2a78d6"
 backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f5f6f8"
+secondaryBackgroundColor = "#eceef2"
 textColor = "#16181d"
-borderColor = "#e2e5ea"
+borderColor = "#d5d9e0"
 
 [theme.dark]
 primaryColor = "#3987e5"

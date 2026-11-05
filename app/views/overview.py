@@ -18,7 +18,7 @@ CHART_HEIGHT = 200
 SPARK_MONTHS = 24  # history drawn under each key figure
 # Theme background is the card colour (charts are painted with it); this page sits the cards
 # on a darker canvas, the theme's secondary background
-CANVAS = {"light": "#f5f6f8", "dark": "#0f1116"}
+CANVAS = {"light": "#eceef2", "dark": "#0f1116"}
 CARD = {"light": "#ffffff", "dark": "#181b21"}
 
 # Streamlit draws bordered containers and metrics without a fill, so give them one; cards are
@@ -29,7 +29,7 @@ st.html(
     "[data-testid='stAppViewContainer'], [data-testid='stHeader'] {"
     f"background: {CANVAS[_mode]}}}"
     "[class*='st-key-card-'], [data-testid='stMetric'] {"
-    f"background: {CARD[_mode]}; box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05)}}"
+    f"background: {CARD[_mode]}; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08)}}"
     "</style>"
 )
 
