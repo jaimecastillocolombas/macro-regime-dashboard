@@ -56,3 +56,9 @@ def trailing(values: pd.Series, years: int | None) -> pd.Series:
     if years is None or values.empty:
         return values
     return values.loc[values.index[-1] - pd.DateOffset(years=years) :]
+
+
+def percentile_rank(values: pd.Series) -> float:
+    """Where the latest value sits in the series' own history: the percent of observations at
+    or below it (100 = the highest reading on record)."""
+    return float((values <= values.iloc[-1]).mean() * 100)

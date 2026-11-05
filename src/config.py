@@ -124,6 +124,27 @@ FRED_SERIES: tuple[SeriesSpec, ...] = (
         60,
         _CPI,
     ),
+    SeriesSpec(
+        "VIXCLS",
+        "FRED",
+        "CBOE VIX, S&P 500 30-day implied volatility",
+        "index points",
+        "daily",
+        "US",
+        1,
+        "Cboe close, posted on FRED the next business day",
+    ),
+    SeriesSpec(
+        "BAA10Y",
+        "FRED",
+        "Moody's Baa corporate yield minus 10-year Treasury",
+        "percent",
+        "daily",
+        "US",
+        1,
+        "Moody's daily yields on FRED the next business day. Chosen over ICE BofA high-yield "
+        "spreads, which FRED only serves for the last 3 years.",
+    ),
 )
 
 
@@ -137,6 +158,20 @@ _IRS = (
     "Monthly average. Observed on 2026-11-04: September published, October not yet, so the "
     "lag is 35-64 days from the month start; 60 days is conservative."
 )
+_CISS = (
+    "Observed on 2026-11-05: latest value dated 2026-11-03, i.e. two TARGET days; three is "
+    "conservative. Replaces the old SS_CI series, discontinued in 2025."
+)
+
+# 10-year government yields (ECB IRS): Germany is the benchmark for every risk premium
+LONG_TERM_RATE_COUNTRIES = {
+    "ES": "Spain",
+    "DE": "Germany",
+    "IT": "Italy",
+    "FR": "France",
+    "PT": "Portugal",
+    "GR": "Greece",
+}
 
 
 def _ecb(series_id, key, name, unit, frequency, country, lag, note) -> SeriesSpec:
@@ -198,25 +233,28 @@ ECB_SERIES: tuple[SeriesSpec, ...] = (
         60,
         _HICP,
     ),
-    _ecb(
-        "ES_LTR_10Y",
-        "IRS/M.ES.L.L40.CI.0000.EUR.N.Z",
-        "Spain 10-year government bond yield",
-        "percent",
-        "monthly",
-        "ES",
-        60,
-        _IRS,
+    *(
+        _ecb(
+            f"{code}_LTR_10Y",
+            f"IRS/M.{code}.L.L40.CI.0000.EUR.N.Z",
+            f"{country} 10-year government bond yield",
+            "percent",
+            "monthly",
+            code,
+            60,
+            _IRS,
+        )
+        for code, country in LONG_TERM_RATE_COUNTRIES.items()
     ),
     _ecb(
-        "DE_LTR_10Y",
-        "IRS/M.DE.L.L40.CI.0000.EUR.N.Z",
-        "Germany 10-year government bond yield",
-        "percent",
-        "monthly",
-        "DE",
-        60,
-        _IRS,
+        "EA_CISS",
+        "CISS/D.U2.Z0Z.4F.EC.SS_CIN.IDX",
+        "ECB Composite Indicator of Systemic Stress, euro area",
+        "index 0-1",
+        "daily",
+        "EA",
+        3,
+        _CISS,
     ),
 )
 

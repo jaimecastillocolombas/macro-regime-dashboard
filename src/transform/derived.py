@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from src.config import LONG_TERM_RATE_COUNTRIES
 from src.transform.series import spread, yoy
 
 
@@ -24,7 +25,14 @@ CATALOGUE: tuple[DerivedSpec, ...] = (
     DerivedSpec("US_CPI_CORE_YOY", ("CPILFENS",), yoy, "percent y/y"),
     DerivedSpec("EA_SLOPE_10Y2Y", ("EA_YC_10Y", "EA_YC_2Y"), spread, "percentage points"),
     DerivedSpec("EA_SLOPE_10Y3M", ("EA_YC_10Y", "EA_YC_3M"), spread, "percentage points"),
-    DerivedSpec("ES_DE_SPREAD", ("ES_LTR_10Y", "DE_LTR_10Y"), spread, "percentage points"),
+    # 10-year risk premium of each country over Germany: ES_DE_SPREAD, IT_DE_SPREAD, ...
+    *(
+        DerivedSpec(
+            f"{code}_DE_SPREAD", (f"{code}_LTR_10Y", "DE_LTR_10Y"), spread, "percentage points"
+        )
+        for code in LONG_TERM_RATE_COUNTRIES
+        if code != "DE"
+    ),
 )
 DERIVED = {spec.name: spec for spec in CATALOGUE}
 

@@ -149,16 +149,16 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 
 La fase 1 está terminada cuando hay una demo pública que se actualiza sola cada día y un README que se entiende en 30 segundos.
 
-### Fase 2: mercados y noticias
+### Fase 2: mercados y noticias (EN CURSO)
 
 - Índices, divisas, materias primas y VIX desde Finnhub (plan gratuito, uso personal, unas 60 llamadas por minuto)
   - **Bolsa de cada país** (petición de Jaime): EE. UU., España, Alemania, Francia, Italia, Reino Unido, Japón... Verificar antes qué da gratis Finnhub: es posible que los índices sean de pago y haya que usar los ETF por país (EWP, EWG, EWQ, EWI...).
-- **Primas de riesgo de varios países** frente a Alemania: Italia, Francia, Portugal, Grecia, además de España. Sale del mismo dataset `IRS` del BCE que ya usamos, sin fuente nueva.
-- **Métricas del miedo en bolsa** (petición de Jaime), todas gratuitas:
+- [x] **Primas de riesgo de varios países** frente a Alemania: Italia, Francia, Portugal, Grecia, además de España. Sale del mismo dataset `IRS` del BCE que ya usamos, sin fuente nueva.
+- [x] **Métricas del miedo en bolsa** (petición de Jaime), todas gratuitas (página *Risk*, cada métrica como percentil de su histórico):
   - VIX (FRED `VIXCLS`), volatilidad implícita del S&P 500
-  - Spreads de crédito high yield de EE. UU. y del euro (FRED, índices ICE BofA)
-  - CISS del BCE, índice compuesto de estrés financiero de la zona euro (dataset `CISS`)
-  - Un indicador agregado de miedo/codicia construido por nosotros a partir de los anteriores, documentado y con tests
+  - Spread de crédito Moody's Baa-10Y (FRED `BAA10Y`, desde 1986). Se descartan los high yield de ICE BofA: FRED solo sirve 3 años
+  - CISS del BCE, índice compuesto de estrés financiero de la zona euro (`CISS/D.U2.Z0Z.4F.EC.SS_CIN.IDX`; el antiguo `SS_CI` se dejó de publicar en 2025)
+  - [ ] Un indicador agregado de miedo/codicia construido por nosotros a partir de los anteriores, documentado y con tests
 - **Tablón de noticias relevantes** (petición de Jaime): feed filtrado, con el sentimiento calculado por nosotros con FinBERT (`ProsusAI/finbert`), porque el sentimiento de Finnhub es de pago
 - Indicador agregado de sentimiento diario en el dashboard
 
