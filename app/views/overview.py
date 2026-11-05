@@ -10,6 +10,16 @@ from src.transform.curves import curve_on
 from src.transform.series import spread, trailing
 
 TARGET = 2.0  # ECB inflation target, percent
+# The page is a one-screen panel: four charts in two rows must fit a laptop browser window
+# (1440x900 screen) without scrolling, so the charts are shorter than elsewhere and the notes
+# live in tooltips
+CHART_HEIGHT = 220
+
+# Streamlit pads the page with ~130 px above (under the 60 px top bar) and 160 px below; on a
+# single-screen panel that is a fifth of the window, so trim it on this page only
+st.html(
+    "<style>[data-testid='stMainBlockContainer']{padding-top: 4.5rem; padding-bottom: 1rem}</style>"
+)
 
 stored = load(
     tuple(
@@ -39,7 +49,10 @@ def year_ago(values: pd.Series) -> float:
     return values.loc[: values.index[-1] - pd.DateOffset(years=1)].iloc[-1]
 
 
-st.title("Macro at a glance")
+def chart_title(title: str, note: str) -> None:
+    """Bold one-line title with the source note behind a help icon, to save vertical space."""
+    st.markdown(f"**{title}**", help=note)
+
 
 # ----------------------------------------------------------------------------- key figures
 
@@ -79,12 +92,12 @@ with tiles[3]:
 
 left, right = st.columns(2)
 with left:
-    st.subheader("Inflation in Spain")
+    chart_title("Inflation in Spain", "INE CPI. Dotted line: the ECB's 2% target.")
     lines = {"Headline": trailing(cpi, 10), "Core": trailing(core, 10)}
-    st.plotly_chart(line_figure(lines, "Percent, y/y", reference=TARGET), width="stretch")
-    st.caption("INE CPI. Dotted line: the ECB's 2% target.")
+    figure = line_figure(lines, "Percent, y/y", reference=TARGET, height=CHART_HEIGHT)
+    st.plotly_chart(figure, width="stretch")
 with right:
-    st.subheader("Euro area yield curve")
+    chart_title("Euro area yield curve", "AAA-rated euro area government bonds (ECB).")
     today = stored[EA_CURVE["10Y"]].index[-1]
     curves = [
         (f"{today.day} {today:%b %Y}", curve_on(stored, EA_CURVE, today), color(1)),
@@ -94,16 +107,21 @@ with right:
             color(3),
         ),
     ]
-    st.plotly_chart(curve_figure(curves), width="stretch")
-    st.caption("AAA-rated euro area government bonds (ECB).")
+    st.plotly_chart(curve_figure(curves, height=CHART_HEIGHT), width="stretch")
 
 left, right = st.columns(2)
 with left:
-    st.subheader("Spain-Germany risk premium")
-    st.plotly_chart(line_figure({"ES-DE": premium}, "Basis points"), width="stretch")
-    st.caption("Gap between Spanish and German 10-year yields, monthly averages (ECB).")
+    chart_title(
+        "Spain-Germany risk premium",
+        "Gap between Spanish and German 10-year yields, monthly averages (ECB).",
+    )
+    figure = line_figure({"ES-DE": premium}, "Basis points", height=CHART_HEIGHT)
+    st.plotly_chart(figure, width="stretch")
 with right:
-    st.subheader("Curve slope: 10-year minus 2-year")
+    chart_title(
+        "Curve slope: 10-year minus 2-year",
+        "Below zero (inverted curve) has historically preceded recessions.",
+    )
     slopes = {
         "United States": trailing(
             spread(stored[US_CURVE["10Y"]], stored[US_CURVE["2Y"]])["value"], 20
@@ -114,6 +132,6 @@ with right:
         slopes,
         "Percentage points",
         colors={"United States": color(1), "Euro area": color(2)},
+        height=CHART_HEIGHT,
     )
     st.plotly_chart(figure, width="stretch")
-    st.caption("Below zero (inverted curve) has historically preceded recessions.")
