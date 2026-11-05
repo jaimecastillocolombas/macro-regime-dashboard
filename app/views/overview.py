@@ -6,6 +6,7 @@ from streamlit.delta_generator import DeltaGenerator
 
 from app.charts import color, curve_figure, line_figure
 from app.data import load
+from app.style import cards_on_canvas
 from src.config import EA_CURVE, US_CURVE
 from src.transform.curves import curve_on
 from src.transform.series import spread, trailing
@@ -18,23 +19,10 @@ CHART_HEIGHT = 200
 SPARK_MONTHS = 24  # history drawn under each key figure
 # No Plotly toolbar: on a touch screen it stays visible and covers the legends
 PLOT_CONFIG = {"displayModeBar": False}
-# Theme background is the card colour (charts are painted with it); this page sits the cards
-# on a darker canvas, the theme's secondary background. Each pair is (light, dark).
-CANVAS = ("#eceef2", "#0f1116")
-CARD = ("#ffffff", "#181b21")
 
-# Streamlit draws bordered containers and metrics without a fill, so give them one; cards are
-# found by the class Streamlit derives from their key. The colours are picked in the browser
-# with CSS light-dark(), which follows the color-scheme Streamlit sets for the active theme:
-# st.context.theme is only refreshed on a rerun, so switching theme from the menu left white
-# cards on a dark page.
+cards_on_canvas()
 st.html(
     "<style>"
-    "[data-testid='stAppViewContainer'], [data-testid='stHeader'] {"
-    f"background: light-dark({CANVAS[0]}, {CANVAS[1]})}}"
-    "[class*='st-key-card-'], [data-testid='stMetric'] {"
-    f"background: light-dark({CARD[0]}, {CARD[1]});"
-    "box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08)}"
     # On phones Streamlit stacks every column full width; keep the key figures two per row
     "@media (max-width: 640px) {.st-key-kpis [data-testid='stColumn']"
     "{min-width: calc(50% - 8px)}"
