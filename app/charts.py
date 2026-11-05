@@ -38,7 +38,8 @@ def series_colors() -> list[str]:
 def _style(fig: go.Figure, y_title: str) -> go.Figure:
     fig.update_layout(
         margin={"l": 8, "r": 8, "t": 8, "b": 8},
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "x": 0},
+        font={"family": "Inter, sans-serif", "size": 11},  # same typeface as the app theme
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "x": 0, "font_size": 12},
         yaxis_title=y_title,
     )
     fig.update_xaxes(showgrid=False)

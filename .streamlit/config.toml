@@ -1,0 +1,27 @@
+# App-wide look: one typeface and the chart palette's blue as the accent. The background is
+# the card colour, so charts (which Streamlit paints with it) blend into the overview's
+# cards; the overview greys its own canvas. Light and dark are both set explicitly.
+[theme]
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFontWeights = [700, 600, 600, 600, 600, 600]
+metricValueFontSize = "1.75rem"
+metricValueFontWeight = 600
+baseRadius = "0.6rem"
+showWidgetBorder = true
+# Default page padding (6rem above, 10rem below) is sized for long scrolling pages
+paddingTop = "1.5rem"
+paddingBottom = "1.5rem"
+
+[theme.light]
+primaryColor = "#2a78d6"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f5f6f8"
+textColor = "#16181d"
+borderColor = "#e2e5ea"
+
+[theme.dark]
+primaryColor = "#3987e5"
+backgroundColor = "#181b21"
+secondaryBackgroundColor = "#0f1116"
+textColor = "#eceef1"
+borderColor = "#2a2e36"
