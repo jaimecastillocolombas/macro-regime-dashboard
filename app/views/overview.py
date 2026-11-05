@@ -2,6 +2,7 @@
 
 import pandas as pd
 import streamlit as st
+from streamlit.delta_generator import DeltaGenerator
 
 from app.charts import color, curve_figure, line_figure
 from app.data import load
@@ -10,6 +11,27 @@ from src.transform.curves import curve_on
 from src.transform.series import spread, trailing
 
 TARGET = 2.0  # ECB inflation target, percent
+YEARS = 10  # every time series on the panel shows the same window, so they read side by side
+# The page is a one-screen panel: the key figures and four chart cards must fit a 1080p
+# browser window without scrolling
+CHART_HEIGHT = 200
+SPARK_MONTHS = 24  # history drawn under each key figure
+# Theme background is the card colour (charts are painted with it); this page sits the cards
+# on a darker canvas, the theme's secondary background
+CANVAS = {"light": "#eceef2", "dark": "#0f1116"}
+CARD = {"light": "#ffffff", "dark": "#181b21"}
+
+# Streamlit draws bordered containers and metrics without a fill, so give them one; cards are
+# found by the class Streamlit derives from their key
+_mode = st.context.theme.type or "light"
+st.html(
+    "<style>"
+    "[data-testid='stAppViewContainer'], [data-testid='stHeader'] {"
+    f"background: {CANVAS[_mode]}}}"
+    "[class*='st-key-card-'], [data-testid='stMetric'] {"
+    f"background: {CARD[_mode]}; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08)}}"
+    "</style>"
+)
 
 stored = load(
     tuple(
@@ -39,7 +61,18 @@ def year_ago(values: pd.Series) -> float:
     return values.loc[: values.index[-1] - pd.DateOffset(years=1)].iloc[-1]
 
 
-st.title("Macro at a glance")
+def card(title: str, subtitle: str) -> DeltaGenerator:
+    """Bordered card with a bold title and a one-line grey subtitle (unit, window, source)."""
+    box = st.container(border=True, key=f"card-{title}", gap="xxsmall")
+    box.markdown(f"**{title}**  \n:gray[:small[{subtitle}]]")
+    return box
+
+
+def spark(values: pd.Series) -> list[float]:
+    """Last SPARK_MONTHS of a series, one point per month, for the line under a key figure."""
+    monthly = values.resample("MS").last().dropna()
+    return monthly.iloc[-SPARK_MONTHS:].round(2).tolist()
+
 
 # ----------------------------------------------------------------------------- key figures
 
@@ -47,11 +80,13 @@ tiles = st.columns(4)
 with tiles[0]:
     change = round(cpi.iloc[-1] - cpi.iloc[-2], 1)
     st.metric(
-        f"Spain inflation, {cpi.index[-1]:%b %Y}",
+        f"Spain inflation · {cpi.index[-1]:%b %Y}",
         f"{cpi.iloc[-1]:.1f}%",
         f"{change:+.1f} pp vs previous month" if change else "unchanged vs previous month",
         delta_color="inverse" if change else "off",
         delta_arrow="auto" if change else "off",
+        border=True,
+        chart_data=spark(cpi),
     )
 with tiles[1]:
     st.metric(
@@ -59,32 +94,39 @@ with tiles[1]:
         f"{deposit_rate.iloc[-1]:.2f}%",
         f"{deposit_rate.iloc[-1] - year_ago(deposit_rate):+.2f} pp in a year",
         delta_color="off",
+        border=True,
+        chart_data=spark(deposit_rate),
     )
 with tiles[2]:
     st.metric(
-        f"Spain 10-year bond, {spain_10y.index[-1]:%b %Y}",
+        f"Spain 10-year bond · {spain_10y.index[-1]:%b %Y}",
         f"{spain_10y.iloc[-1]:.2f}%",
         f"{spain_10y.iloc[-1] - year_ago(spain_10y):+.2f} pp in a year",
         delta_color="off",
+        border=True,
+        chart_data=spark(spain_10y),
     )
 with tiles[3]:
     st.metric(
-        f"Risk premium vs Germany, {premium.index[-1]:%b %Y}",
+        f"Risk premium vs Germany · {premium.index[-1]:%b %Y}",
         f"{premium.iloc[-1]:.0f} bp",
         f"{premium.iloc[-1] - year_ago(premium):+.0f} bp in a year",
         delta_color="inverse",
+        border=True,
+        chart_data=spark(premium),
     )
 
 # ----------------------------------------------------------------------------- charts
 
 left, right = st.columns(2)
-with left:
-    st.subheader("Inflation in Spain")
-    lines = {"Headline": trailing(cpi, 10), "Core": trailing(core, 10)}
-    st.plotly_chart(line_figure(lines, "Percent, y/y", reference=TARGET), width="stretch")
-    st.caption("INE CPI. Dotted line: the ECB's 2% target.")
-with right:
-    st.subheader("Euro area yield curve")
+with (
+    left,
+    card("Inflation in Spain", f"% y/y, last {YEARS} years · dotted line: ECB 2% target · INE"),
+):
+    lines = {"Headline": trailing(cpi, YEARS), "Core": trailing(core, YEARS)}
+    figure = line_figure(lines, "", reference=TARGET, height=CHART_HEIGHT)
+    st.plotly_chart(figure, width="stretch")
+with right, card("Euro area yield curve", "% by maturity, AAA government bonds · ECB"):
     today = stored[EA_CURVE["10Y"]].index[-1]
     curves = [
         (f"{today.day} {today:%b %Y}", curve_on(stored, EA_CURVE, today), color(1)),
@@ -94,26 +136,37 @@ with right:
             color(3),
         ),
     ]
-    st.plotly_chart(curve_figure(curves), width="stretch")
-    st.caption("AAA-rated euro area government bonds (ECB).")
+    st.plotly_chart(curve_figure(curves, height=CHART_HEIGHT, y_title=""), width="stretch")
 
 left, right = st.columns(2)
-with left:
-    st.subheader("Spain-Germany risk premium")
-    st.plotly_chart(line_figure({"ES-DE": premium}, "Basis points"), width="stretch")
-    st.caption("Gap between Spanish and German 10-year yields, monthly averages (ECB).")
-with right:
-    st.subheader("Curve slope: 10-year minus 2-year")
+with (
+    left,
+    card(
+        "Spain-Germany risk premium",
+        f"Basis points, 10-year yield gap, last {YEARS} years · ECB",
+    ),
+):
+    figure = line_figure({"ES-DE": trailing(premium, YEARS)}, "", height=CHART_HEIGHT)
+    st.plotly_chart(figure, width="stretch")
+with (
+    right,
+    card(
+        "Curve slope: 10-year minus 2-year",
+        f"Percentage points, last {YEARS} years · below zero has preceded recessions",
+    ),
+):
     slopes = {
         "United States": trailing(
-            spread(stored[US_CURVE["10Y"]], stored[US_CURVE["2Y"]])["value"], 20
+            spread(stored[US_CURVE["10Y"]], stored[US_CURVE["2Y"]])["value"], YEARS
         ),
-        "Euro area": trailing(spread(stored[EA_CURVE["10Y"]], stored[EA_CURVE["2Y"]])["value"], 20),
+        "Euro area": trailing(
+            spread(stored[EA_CURVE["10Y"]], stored[EA_CURVE["2Y"]])["value"], YEARS
+        ),
     }
     figure = line_figure(
         slopes,
-        "Percentage points",
+        "",
         colors={"United States": color(1), "Euro area": color(2)},
+        height=CHART_HEIGHT,
     )
     st.plotly_chart(figure, width="stretch")
-    st.caption("Below zero (inverted curve) has historically preceded recessions.")

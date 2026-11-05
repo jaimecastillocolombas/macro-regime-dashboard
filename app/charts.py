@@ -38,7 +38,8 @@ def series_colors() -> list[str]:
 def _style(fig: go.Figure, y_title: str) -> go.Figure:
     fig.update_layout(
         margin={"l": 8, "r": 8, "t": 8, "b": 8},
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "x": 0},
+        font={"family": "Inter, sans-serif", "size": 11},  # same typeface as the app theme
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "x": 0, "font_size": 12},
         yaxis_title=y_title,
     )
     fig.update_xaxes(showgrid=False)
@@ -51,7 +52,9 @@ def _maturity_axis(fig: go.Figure, curve: pd.DataFrame) -> None:
     fig.update_xaxes(type="log", tickvals=curve["years"], ticktext=curve["tenor"], title="Maturity")
 
 
-def curve_figure(curves: list[tuple[str, pd.DataFrame, str]]) -> go.Figure:
+def curve_figure(
+    curves: list[tuple[str, pd.DataFrame, str]], height: int = 380, y_title: str = "Yield (%)"
+) -> go.Figure:
     """One line per (label, curve, colour), x = years to maturity on a log scale."""
     fig = go.Figure()
     for label, curve, line_color in curves:
@@ -67,9 +70,9 @@ def curve_figure(curves: list[tuple[str, pd.DataFrame, str]]) -> go.Figure:
                 hovertemplate="%{customdata[0]}: %{y:.2f}%<extra>" + label + "</extra>",
             )
         )
-    fig.update_layout(height=380)
+    fig.update_layout(height=height)
     _maturity_axis(fig, curves[0][1])
-    return _style(fig, "Yield (%)")
+    return _style(fig, y_title)
 
 
 def line_figure(
