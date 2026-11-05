@@ -21,16 +21,6 @@ SPARK_MONTHS = 24  # history drawn under each key figure
 PLOT_CONFIG = {"displayModeBar": False}
 
 cards_on_canvas()
-st.html(
-    "<style>"
-    # On phones Streamlit stacks every column full width; keep the key figures two per row
-    "@media (max-width: 640px) {.st-key-kpis [data-testid='stColumn']"
-    "{min-width: calc(50% - 8px)}"
-    # ...and let their labels wrap instead of ending in an ellipsis at half width
-    ".st-key-kpis [data-testid='stMetricLabel'] *, .st-key-kpis [data-testid='stMetricDelta'] *"
-    "{white-space: normal !important; text-overflow: clip}}"
-    "</style>"
-)
 
 stored = load(
     tuple(
@@ -75,7 +65,7 @@ def spark(values: pd.Series) -> list[float]:
 
 # ----------------------------------------------------------------------------- key figures
 
-tiles = st.container(key="kpis").columns(4)
+tiles = st.columns(4)
 with tiles[0]:
     change = round(cpi.iloc[-1] - cpi.iloc[-2], 1)
     st.metric(

@@ -17,22 +17,54 @@ for name in [m for m in sys.modules if m.split(".")[0] in {"src", "app"}]:
     del sys.modules[name]
 
 from app.data import source_freshness  # noqa: E402  (needs the path set above)
-from app.header import freshness_line  # noqa: E402
+from app.header import freshness_line, freshness_short  # noqa: E402
 
 st.set_page_config(page_title="Macro Regime Dashboard", layout="wide")
 
-navigation = st.navigation(
-    [
-        st.Page("views/overview.py", title="Overview", default=True),
-        st.Page("views/rates.py", title="Rates & Bonds"),
-        st.Page("views/inflation.py", title="Inflation"),
-        st.Page("views/markets.py", title="Markets"),
-        st.Page("views/risk.py", title="Risk"),
-        st.Page("views/news.py", title="News"),
-    ],
-    # A bar across the top frees the sidebar's width for the charts; on narrow screens
-    # Streamlit folds it into a menu by itself
-    position="top",
+PAGES = [
+    st.Page("views/overview.py", title="Overview", default=True),
+    st.Page("views/rates.py", title="Rates & Bonds"),
+    st.Page("views/inflation.py", title="Inflation"),
+    st.Page("views/markets.py", title="Markets"),
+    st.Page("views/risk.py", title="Risk"),
+    st.Page("views/news.py", title="News"),
+]
+# A bar across the top frees the sidebar's width for the charts. On narrow screens Streamlit
+# swaps it for a sidebar hidden behind a small arrow, so phones get their own row of links
+# instead (see PHONE_CSS)
+navigation = st.navigation(PAGES, position="top")
+
+# Phone layout, applied to every page. "Phone" means Streamlit has dropped its top bar, so the
+# own row of links appears exactly when the bar is gone. Elsewhere only the width matters.
+PHONE_CSS = (
+    "<style>"
+    # Each row is hidden through the wrapper Streamlit puts around it: hiding only the row
+    # leaves an empty wrapper that still takes a gap (and pushes the overview past one screen)
+    "[data-testid='stLayoutWrapper']:has(> .st-key-phone-nav),"
+    " [data-testid='stLayoutWrapper']:has(> .st-key-freshness-short) {display: none}"
+    "body:not(:has([data-testid='stTopNav']))"
+    " [data-testid='stLayoutWrapper']:has(> .st-key-phone-nav) {display: flex}"
+    "body:not(:has([data-testid='stTopNav'])) [data-testid='stExpandSidebarButton']"
+    " {display: none}"
+    "@media (max-width: 640px) {"
+    # one short freshness line instead of five
+    " [data-testid='stLayoutWrapper']:has(> .st-key-freshness) {display: none}"
+    " [data-testid='stLayoutWrapper']:has(> .st-key-freshness-short) {display: flex}"
+    # headings sized for a phone, not a monitor
+    " h1 {font-size: 1.6rem !important} h2 {font-size: 1.2rem !important}"
+    " h3 {font-size: 1.05rem !important}"
+    # key figures two per row (Streamlit stacks every column full width), with smaller
+    # values and labels that wrap instead of ending in an ellipsis; columns that also hold
+    # a chart keep the full width
+    " [data-testid='stColumn']:has([data-testid='stMetric'])"
+    ":not(:has([data-testid='stPlotlyChart'])) {min-width: calc(50% - 8px)}"
+    " [data-testid='stMetricValue'] {font-size: 1.4rem}"
+    " [data-testid='stMetricLabel'] *, [data-testid='stMetricDelta'] *"
+    " {white-space: normal !important; text-overflow: clip}"
+    "}"
+    # no Plotly toolbar on touch screens, where it stays visible over the legends
+    "@media (hover: none) {.modebar-container {display: none}}"
+    "</style>"
 )
 
 
@@ -44,15 +76,11 @@ if status.empty:
         "on Streamlit Cloud, check the DATABASE_URL secret."
     )
     st.stop()
-# Phone-friendly tweaks for every page: smaller page titles and freshness line (it wraps over
-# five lines otherwise) and no Plotly toolbar on touch screens, where it stays visible over
-# the legends
-st.html(
-    "<style>"
-    "@media (max-width: 640px) {.st-key-freshness p {font-size: 0.7rem}"
-    " h1 {font-size: 1.9rem !important} h2 {font-size: 1.4rem !important}}"
-    "@media (hover: none) {.modebar-container {display: none}}"
-    "</style>"
-)
-st.container(key="freshness").caption(freshness_line(status, pd.Timestamp.now(tz="UTC")))
+st.html(PHONE_CSS)
+with st.container(key="phone-nav", horizontal=True, gap="xxsmall"):
+    for page in PAGES:
+        st.page_link(page, width="content")
+now = pd.Timestamp.now(tz="UTC")
+st.container(key="freshness").caption(freshness_line(status, now))
+st.container(key="freshness-short").caption(freshness_short(status, now))
 navigation.run()

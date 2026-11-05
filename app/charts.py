@@ -1,5 +1,7 @@
 """Plotly figure builders shared by the pages: one look for every chart."""
 
+import re
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -35,6 +37,18 @@ def series_colors() -> list[str]:
     return _SERIES[_mode()]
 
 
+_PHONE = re.compile(r"Mobi|Android|iPhone|iPad", re.I)
+
+
+def is_phone(user_agent: str) -> bool:
+    """Whether a browser's User-Agent belongs to a phone or tablet."""
+    return bool(_PHONE.search(user_agent))
+
+
+def _on_phone() -> bool:
+    return is_phone(st.context.headers.get("User-Agent", ""))
+
+
 def _style(fig: go.Figure, y_title: str) -> go.Figure:
     fig.update_layout(
         margin={"l": 8, "r": 8, "t": 8, "b": 8},
@@ -44,12 +58,27 @@ def _style(fig: go.Figure, y_title: str) -> go.Figure:
     )
     fig.update_xaxes(showgrid=False)
     fig.update_yaxes(zeroline=False)
+    if _on_phone():
+        # On a touch screen dragging a chart zoomed it instead of scrolling the page, and
+        # zooming a 350 px chart is of no use: fix the axes so a swipe scrolls and a tap still
+        # shows the values
+        fig.update_layout(dragmode=False)
+        fig.update_xaxes(fixedrange=True)
+        fig.update_yaxes(fixedrange=True)
     return fig
+
+
+# On a log scale 5Y-7Y-10Y and 20Y-30Y sit close together, and on a phone their labels
+# overlap; 7Y and 20Y keep their point (and hover label) but not an axis label
+UNLABELLED_TENORS = {"7Y", "20Y"}
 
 
 def _maturity_axis(fig: go.Figure, curve: pd.DataFrame) -> None:
     """Log-scaled maturity axis labelled with the tenors (3M ... 30Y)."""
-    fig.update_xaxes(type="log", tickvals=curve["years"], ticktext=curve["tenor"], title="Maturity")
+    labelled = curve[~curve["tenor"].isin(UNLABELLED_TENORS)]
+    fig.update_xaxes(
+        type="log", tickvals=labelled["years"], ticktext=labelled["tenor"], title="Maturity"
+    )
 
 
 def curve_figure(
