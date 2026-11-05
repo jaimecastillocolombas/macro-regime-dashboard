@@ -190,3 +190,41 @@ ruff check . && ruff format .         # lint y formato
 - GitHub desactiva los workflows programados de los repos públicos tras 60 días sin actividad. Hay que hacer algún commit de vez en cuando.
 - El plan gratuito de Supabase pausa un proyecto tras una semana sin actividad; la ingesta diaria lo evita. GitHub desactiva los workflows programados tras 60 días sin commits en el repo: si eso ocurre, se reactiva a mano desde la pestaña Actions.
 - La app de Streamlit Community Cloud se duerme tras un tiempo sin visitas. Por eso el README lleva capturas, por si un reclutador la encuentra dormida.
+
+## Estado actual y traspaso a otra máquina
+
+*Actualizado el 2026-11-05, al mudar el proyecto del portátil a la torre de Jaime.*
+
+### Dónde vive cada cosa
+
+- **Código:** este repositorio, público en GitHub (`jaimecastillocolombas/macro-regime-dashboard`).
+- **Web:** https://macro-regime-dashboard-student.streamlit.app (Streamlit Community Cloud). Se redespliega sola con cada push a `main`.
+- **Base de datos de producción:** Supabase, proyecto `nevera`, esquema `macro`, rol `macro_app` (ver *Stack*).
+- **Ingesta diaria:** `.github/workflows/ingest.yml`, 22:30 UTC. No depende de ningún ordenador de Jaime.
+- **Secretos** (nunca en git, nunca en el chat):
+  - GitHub Actions: `FRED_API_KEY`, `DATABASE_URL`.
+  - Streamlit Cloud (Manage app > Settings > Secrets): `DATABASE_URL`, `FINNHUB_API_KEY`.
+  - Local: `.env` (`FRED_API_KEY`, `FINNHUB_API_KEY`, `DATABASE_URL=sqlite:///data/macro.db`) y `.env.production` (`MACRO_APP_PASSWORD`, `DATABASE_URL` de Supabase). Ambos ignorados por git; se pasan de una máquina a otra por USB.
+
+### Puesta en marcha en una máquina nueva (lo hace Claude Code)
+
+1. Comprobar que existen Python 3.11 (`py -3.11 --version`), Git y GitHub CLI (`gh auth status`). Si falta algo, decirle a Jaime qué instalar; no instalar nada a nivel de sistema sin preguntar. Para empujar cambios en `.github/workflows/`, el token de `gh` necesita el permiso `workflow` (`gh auth refresh -h github.com -s workflow`, lo ejecuta Jaime).
+2. Crear el entorno: `py -3.11 -m venv .venv` y `.venv/Scripts/pip install -r requirements.txt`. Nunca instalar paquetes en el Python global.
+3. Copiar `.env` y `.env.production` desde la carpeta que traiga Jaime (USB) a la raíz del repo. Verificar sin imprimir valores: que las claves tienen el formato esperado (FRED: 32 caracteres hex en minúscula; Finnhub: 40 alfanuméricos) y **sin espacios** (en el portátil un espacio colado en la clave de FRED rompió la ingesta de GitHub).
+4. Verificar: `pytest` (61 tests en verde), `ruff check .` y `python -m src.ingest.run` (unos 6 minutos, carga `data/macro.db`; 45 series OK).
+5. Arrancar la app con `streamlit run app/streamlit_app.py` y comprobar las seis páginas.
+6. Opcional: generar `.streamlit/secrets.toml` a partir de `.env` y `.env.production` si Jaime quiere que la app local lea de Supabase.
+
+### Lecciones aprendidas que no están en el código
+
+- Nunca imprimir ni pegar secretos. Para pasarlos a GitHub o Streamlit, leerlos del fichero y enviarlos por stdin o portapapeles; los valores no deben pasar por la conversación.
+- Al editar ficheros con scripts en Windows, escribir siempre con `encoding="utf-8"` (un `·` acabó en cp1252 y rompió ruff).
+- El cortafuegos del portal del BCE bloquea ráfagas de peticiones y consultas con comodines: una serie cada vez.
+- Streamlit solo recarga los módulos de `app/`; por eso `app/streamlit_app.py` borra `src.*` y `app.*` de `sys.modules` en cada ejecución. No quitarlo.
+- Streamlit Cloud guarda en caché el engine; las cachés de `app/data.py` van indexadas por la URL de la base para que un secreto nuevo surta efecto sin reiniciar.
+- Jaime prefiere páginas simples y visuales, con pocos controles.
+
+### Siguiente trabajo
+
+- Fase 2: indicador propio de miedo/codicia (explicar el diseño a Jaime antes de programarlo) y, cuando Jaime lo apruebe, sentimiento de noticias con FinBERT (dependencias pesadas, pedir permiso).
+- Después, fase 3 (backtest). Su lógica se propone y explica; Jaime la revisa línea a línea.
