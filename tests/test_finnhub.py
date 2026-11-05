@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from src.ingest.finnhub import fetch_news, relevant_news
+from src.ingest.finnhub import TOPICS, fetch_news, relevant_news, topic_of
 
 
 def item(
@@ -94,3 +94,27 @@ def test_source_suffix_and_echoed_summary_are_removed() -> None:
     )
     assert news.loc[0, "headline"] == "Oil slips on supply"
     assert news.loc[0, "summary"] == ""
+
+
+def test_topic_comes_from_the_first_matching_group() -> None:
+    assert topic_of("ECB worries about the economy") == "Central banks"
+    assert topic_of("Euro zone economy shrinks") == "Europe"
+    assert topic_of("Stocks rally as inflation cools") == "Inflation"
+    assert topic_of("Gold hits a record") == "Markets"
+    assert topic_of("Retailer opens new stores") is None
+
+
+def test_headline_decides_the_topic_before_the_summary() -> None:
+    assert topic_of("Treasury yields climb", "Stocks fell and the Fed spoke") == "Bonds"
+    assert topic_of("Weekly wrap", "The Fed held rates") == "Central banks"
+
+
+def test_every_keyword_belongs_to_exactly_one_topic() -> None:
+    keywords = [k.lower() for group in TOPICS.values() for k in group]
+    assert len(keywords) == len(set(keywords))
+
+
+def test_news_carries_topic_and_image() -> None:
+    news = relevant_news([item("Bond yields rise") | {"image": "https://example.com/a.jpg"}])
+    assert news.loc[0, "topic"] == "Bonds"
+    assert news.loc[0, "image"] == "https://example.com/a.jpg"

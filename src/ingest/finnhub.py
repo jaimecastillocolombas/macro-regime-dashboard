@@ -17,61 +17,65 @@ NEWS_URL = "https://finnhub.io/api/v1/news"
 # A headline or summary must mention one of these to count as macro news (whole words,
 # case-insensitive). Company results, deals and politics without a market angle are left out.
 # Checked on 2026-11-05: the narrow policy-only list kept 3 of 100 items, this one keeps 30.
-MACRO_KEYWORDS = (
-    # central banks and rates
-    "Fed",
-    "Federal Reserve",
-    "ECB",
-    "central bank",
-    "Powell",
-    "Lagarde",
-    "interest rate",
-    "interest rates",
-    "rate cut",
-    "rate cuts",
-    "rate hike",
-    "rate hikes",
-    # prices
-    "inflation",
-    "deflation",
-    "CPI",
-    "prices",
-    # bonds and debt
-    "bond",
-    "bonds",
-    "yield",
-    "yields",
-    "Treasury",
-    "Treasuries",
-    "debt",
-    "fiscal",
-    # activity
-    "economy",
-    "economic",
-    "recession",
-    "GDP",
-    "unemployment",
-    "payrolls",
-    "jobs report",
-    "trade",
-    "tariff",
-    "tariffs",
-    # markets
-    "markets",
-    "stocks",
-    "stock market",
-    "Wall Street",
-    "oil",
-    "gold",
-    "dollar",
-    "currency",
-    # regions
-    "euro zone",
-    "euro area",
-    "eurozone",
-    "Spain",
-)
-_KEYWORDS = re.compile(r"\b(" + "|".join(re.escape(k) for k in MACRO_KEYWORDS) + r")\b", re.I)
+# The keywords are grouped into the topic each story is tagged with. Topics are tried in this
+# order, most specific first, so "ECB worries about the economy" is central-bank news and the
+# broad "Markets" only catches what nothing else did.
+TOPICS: dict[str, tuple[str, ...]] = {
+    "Central banks": (
+        "Fed",
+        "Federal Reserve",
+        "ECB",
+        "central bank",
+        "Powell",
+        "Lagarde",
+        "interest rate",
+        "interest rates",
+        "rate cut",
+        "rate cuts",
+        "rate hike",
+        "rate hikes",
+    ),
+    "Inflation": ("inflation", "deflation", "CPI", "prices"),
+    "Bonds": ("bond", "bonds", "yield", "yields", "Treasury", "Treasuries", "debt", "fiscal"),
+    "Europe": ("euro zone", "euro area", "eurozone", "Spain"),
+    "Economy": (
+        "economy",
+        "economic",
+        "recession",
+        "GDP",
+        "unemployment",
+        "payrolls",
+        "jobs report",
+        "trade",
+        "tariff",
+        "tariffs",
+    ),
+    "Markets": (
+        "markets",
+        "stocks",
+        "stock market",
+        "Wall Street",
+        "oil",
+        "gold",
+        "dollar",
+        "currency",
+    ),
+}
+_PATTERNS = {
+    topic: re.compile(r"\b(" + "|".join(re.escape(k) for k in keywords) + r")\b", re.I)
+    for topic, keywords in TOPICS.items()
+}
+
+
+def topic_of(headline: str, summary: str = "") -> str | None:
+    """First topic (in TOPICS order) whose keywords the headline mentions, else the summary;
+    None when neither is macro news. The headline wins because it says what the story is about,
+    while summaries often mention markets in passing."""
+    for text in (headline, summary):
+        for topic, pattern in _PATTERNS.items():
+            if pattern.search(text):
+                return topic
+    return None
 
 
 def fetch_news(session: requests.Session, api_key: str, category: str = "general") -> list[dict]:
@@ -90,9 +94,11 @@ def fetch_news(session: requests.Session, api_key: str, category: str = "general
 
 
 def relevant_news(items: list[dict[str, Any]], limit: int = 25) -> pd.DataFrame:
-    """Macro-relevant items, newest first, without duplicate headlines."""
-    columns = ["published", "source", "headline", "summary", "url"]
-    keep = [i for i in items if _KEYWORDS.search(f"{i['headline']} {i['summary']}")]
+    """Macro-relevant items tagged with their topic, newest first, without duplicate
+    headlines."""
+    columns = ["published", "source", "topic", "headline", "summary", "url", "image"]
+    keep = [i | {"topic": topic_of(i["headline"], i["summary"])} for i in items]
+    keep = [i for i in keep if i["topic"]]
     if not keep:
         return pd.DataFrame(columns=columns)
     frame = pd.DataFrame(keep)
