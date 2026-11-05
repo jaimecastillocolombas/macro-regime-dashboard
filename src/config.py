@@ -319,3 +319,28 @@ INE_SERIES: tuple[SeriesSpec, ...] = (
         "IPC292510",
     ),
 )
+
+ALL_SERIES: tuple[SeriesSpec, ...] = (*FRED_SERIES, *ECB_SERIES, *INE_SERIES)
+
+
+def lag_groups(specs: tuple[SeriesSpec, ...]) -> list[dict[str, object]]:
+    """Series that share a source, frequency, lag and lag rule, collapsed into one row each
+    (the nine curve tenors are one row, not nine), in catalogue order. For the About page."""
+    groups: dict[tuple[str, str, int, str], list[SeriesSpec]] = {}
+    for spec in specs:
+        key = (spec.source, spec.frequency, spec.publication_lag_days, spec.lag_note)
+        groups.setdefault(key, []).append(spec)
+    rows = []
+    for (source, frequency, lag, note), members in groups.items():
+        first = members[0].name
+        rows.append(
+            {
+                "source": source,
+                "series": first if len(members) == 1 else f"{first} and {len(members) - 1} more",
+                "count": len(members),
+                "frequency": frequency,
+                "lag_days": lag,
+                "rule": note,
+            }
+        )
+    return rows
