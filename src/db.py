@@ -31,6 +31,7 @@ from sqlalchemy import (
     and_,
     case,
     create_engine,
+    func,
     select,
     tuple_,
 )
@@ -175,4 +176,31 @@ def read_observations(
         return pd.DataFrame(columns=["series_id", "date", "value", "available_at"])
     frame["date"] = pd.to_datetime(frame["date"])
     frame["available_at"] = pd.to_datetime(frame["available_at"])
+    return frame
+
+
+def freshness(engine: Engine) -> pd.DataFrame:
+    """Per source and frequency: last successful download (UTC) and latest observation date.
+
+    The upsert stamps ``retrieved_at`` on every row it writes, so its maximum is the last time
+    any series of that group was ingested. Frequencies are kept apart because one date per
+    source would hide that, say, US CPI is a month behind the daily yields.
+    """
+    query = (
+        select(
+            series.c.source,
+            series.c.frequency,
+            func.max(observations.c.retrieved_at).label("retrieved_at"),
+            func.max(observations.c.date).label("latest_date"),
+        )
+        .join(observations, observations.c.series_id == series.c.series_id)
+        .group_by(series.c.source, series.c.frequency)
+        .order_by(series.c.source, series.c.frequency)
+    )
+    with engine.connect() as conn:
+        rows = conn.execute(query).all()
+    frame = pd.DataFrame(rows, columns=["source", "frequency", "retrieved_at", "latest_date"])
+    # SQLite drops the timezone on read; every timestamp we write is UTC
+    frame["retrieved_at"] = pd.to_datetime(frame["retrieved_at"], utc=True)
+    frame["latest_date"] = pd.to_datetime(frame["latest_date"])
     return frame

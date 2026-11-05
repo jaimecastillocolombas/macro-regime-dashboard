@@ -3,10 +3,14 @@
 import sys
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
 # Streamlit only puts app/ on the import path; the shared code lives in src/ at the repo root
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app.data import source_freshness  # noqa: E402  (needs the path set above)
+from app.header import freshness_line  # noqa: E402
 
 st.set_page_config(page_title="Macro Regime Dashboard", layout="wide")
 
@@ -16,4 +20,7 @@ navigation = st.navigation(
         st.Page("views/inflation.py", title="Inflation"),
     ]
 )
+
+
+st.caption(freshness_line(source_freshness(), pd.Timestamp.now(tz="UTC")))
 navigation.run()

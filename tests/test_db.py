@@ -2,12 +2,14 @@
 
 from datetime import UTC, date, datetime
 
+import pandas as pd
 import pytest
 from sqlalchemy import Engine, func, select
 from sqlalchemy.dialects import postgresql
 
 from src.db import (
     build_observation_upsert,
+    freshness,
     get_engine,
     latest_available,
     observations,
@@ -114,3 +116,47 @@ def test_postgres_statement_uses_on_conflict() -> None:
     sql = str(stmt.compile(dialect=postgresql.dialect()))
     assert "ON CONFLICT (series_id, date) DO UPDATE" in sql
     assert "CASE WHEN" in sql
+
+
+def test_freshness_reports_each_source(tmp_path) -> None:
+    engine = get_engine(f"sqlite:///{tmp_path / 'test.db'}")
+    early = datetime(2026, 11, 4, 22, 0, tzinfo=UTC)
+    late = datetime(2026, 11, 5, 6, 0, tzinfo=UTC)
+    upsert_series(
+        engine,
+        [
+            {**SERIES, "series_id": "A", "source": "FRED"},
+            {**SERIES, "series_id": "B", "source": "ECB"},
+        ],
+    )
+    upsert_observations(
+        engine,
+        [
+            {
+                "series_id": "A",
+                "date": date(2026, 11, 3),
+                "value": 1.0,
+                "available_at": date(2026, 11, 4),
+                "retrieved_at": early,
+            },
+            {
+                "series_id": "A",
+                "date": date(2026, 11, 4),
+                "value": 1.0,
+                "available_at": date(2026, 11, 5),
+                "retrieved_at": late,
+            },
+            {
+                "series_id": "B",
+                "date": date(2026, 10, 1),
+                "value": 2.0,
+                "available_at": date(2026, 11, 4),
+                "retrieved_at": early,
+            },
+        ],
+    )
+    status = freshness(engine).set_index(["source", "frequency"])
+    assert status.loc[("FRED", "daily"), "retrieved_at"] == pd.Timestamp(late)
+    assert status.loc[("FRED", "daily"), "latest_date"] == pd.Timestamp("2026-11-04")
+    assert status.loc[("ECB", "daily"), "latest_date"] == pd.Timestamp("2026-10-01")
+    assert str(status["retrieved_at"].dt.tz) == "UTC"
