@@ -12,4 +12,6 @@ python -m venv .venv
 pip install -r requirements.txt
 cp .env.example .env          # then add your FRED_API_KEY
 pytest
+python -m src.ingest.run      # load every series into data/macro.db
+streamlit run app/streamlit_app.py
 ```

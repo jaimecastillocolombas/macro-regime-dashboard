@@ -48,7 +48,10 @@ macro-regime-dashboard/
 │   │   └── derived.py      # catálogo de series derivadas, calculadas al leer
 │   └── strategy/           # fase 3
 ├── app/
-│   └── streamlit_app.py
+│   ├── streamlit_app.py    # navegación; `streamlit run app/streamlit_app.py`
+│   ├── data.py             # lecturas cacheadas, sin lógica
+│   ├── charts.py           # figuras de plotly con la paleta común
+│   └── views/              # una página por archivo
 ├── tests/
 │   └── fixtures/           # respuestas de API guardadas
 └── notebooks/              # solo exploración, nunca lógica de producción
@@ -129,7 +132,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 - [x] Ingesta INE con tests
 - [x] `run.py` con el resumen final
 - [x] Transformaciones: tasas interanuales, spreads 10Y-2Y y 10Y-3M de EE. UU., pendiente de la curva euro y prima de riesgo ES-DE
-- [ ] Página *Rates & Bonds* del dashboard:
+- [x] Página *Rates & Bonds* del dashboard:
   - curva actual frente a hace 1 mes y 1 año (EE. UU. y euro)
   - histórico del spread con los periodos de inversión sombreados
   - prima de riesgo
