@@ -152,7 +152,14 @@ La fase 1 está terminada cuando hay una demo pública que se actualiza sola cad
 ### Fase 2: mercados y noticias
 
 - Índices, divisas, materias primas y VIX desde Finnhub (plan gratuito, uso personal, unas 60 llamadas por minuto)
-- Feed de noticias filtrado, con el sentimiento calculado por nosotros con FinBERT (`ProsusAI/finbert`), porque el sentimiento de Finnhub es de pago
+  - **Bolsa de cada país** (petición de Jaime): EE. UU., España, Alemania, Francia, Italia, Reino Unido, Japón... Verificar antes qué da gratis Finnhub: es posible que los índices sean de pago y haya que usar los ETF por país (EWP, EWG, EWQ, EWI...).
+- **Primas de riesgo de varios países** frente a Alemania: Italia, Francia, Portugal, Grecia, además de España. Sale del mismo dataset `IRS` del BCE que ya usamos, sin fuente nueva.
+- **Métricas del miedo en bolsa** (petición de Jaime), todas gratuitas:
+  - VIX (FRED `VIXCLS`), volatilidad implícita del S&P 500
+  - Spreads de crédito high yield de EE. UU. y del euro (FRED, índices ICE BofA)
+  - CISS del BCE, índice compuesto de estrés financiero de la zona euro (dataset `CISS`)
+  - Un indicador agregado de miedo/codicia construido por nosotros a partir de los anteriores, documentado y con tests
+- **Tablón de noticias relevantes** (petición de Jaime): feed filtrado, con el sentimiento calculado por nosotros con FinBERT (`ProsusAI/finbert`), porque el sentimiento de Finnhub es de pago
 - Indicador agregado de sentimiento diario en el dashboard
 
 ### Fase 3: backtest de la estrategia de rotación por régimen
