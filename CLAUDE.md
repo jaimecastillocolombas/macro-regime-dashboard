@@ -43,7 +43,9 @@ macro-regime-dashboard/
 │   │   ├── ecb.py
 │   │   ├── ine.py
 │   │   └── run.py          # punto de entrada: `python -m src.ingest.run`
-│   ├── transform/          # spreads, tasas interanuales, prima de riesgo
+│   ├── transform/
+│   │   ├── series.py       # funciones puras: spread, yoy, as_of
+│   │   └── derived.py      # catálogo de series derivadas, calculadas al leer
 │   └── strategy/           # fase 3
 ├── app/
 │   └── streamlit_app.py
@@ -71,6 +73,7 @@ La clave es (`series_id`, `date`) y la escritura se hace con upsert.
 - **FRED, series mensuales:** `value` es la vintage actual y `available_at` es la fecha de la primera publicación (`realtime_start` con `output_type=4` de ALFRED). Para fechas anteriores a las vintages se usa `publication_lag_days`. El look-ahead residual está medido: el IPC sin desestacionalizar casi no se revisa (subyacente: 3,4 % de los valores, máximo 0,2 puntos del índice).
 - **FRED, series diarias** (tipos, 5y5y): tienen miles de vintages y no se revisan, así que `available_at` = fecha + `publication_lag_days` días hábiles.
 - **BCE e INE:** no guardan historial de publicaciones, así que `available_at = min(fecha + publication_lag_days, día de descarga)`. El histórico recibe el retraso conservador (documentado en `config.py` con su fuente) y, desde la primera ingesta programada, los datos nuevos reciben el día en que se vieron. Las series diarias del BCE usan días hábiles del calendario TARGET2.
+- **Series derivadas** (interanuales del IPC de EE. UU., pendiente del euro, prima ES-DE): se calculan al leer, no se guardan. Su `available_at` es el máximo del de sus componentes, así que filtrar la derivada por `available_at <= t` equivale a calcularla con las componentes filtradas en t. Los spreads 10Y-2Y y 10Y-3M de EE. UU. no se derivan: se usan `T10Y2Y` y `T10Y3M` de FRED.
 
 ## Fuentes de datos (fase 1)
 
@@ -125,7 +128,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 - [x] Ingesta BCE con tests
 - [x] Ingesta INE con tests
 - [x] `run.py` con el resumen final
-- [ ] Transformaciones: tasas interanuales, spreads 10Y-2Y y 10Y-3M de EE. UU., pendiente de la curva euro y prima de riesgo ES-DE
+- [x] Transformaciones: tasas interanuales, spreads 10Y-2Y y 10Y-3M de EE. UU., pendiente de la curva euro y prima de riesgo ES-DE
 - [ ] Página *Rates & Bonds* del dashboard:
   - curva actual frente a hace 1 mes y 1 año (EE. UU. y euro)
   - histórico del spread con los periodos de inversión sombreados

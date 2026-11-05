@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
+import pandas as pd
 from sqlalchemy import (
     Column,
     Date,
@@ -151,3 +152,27 @@ def latest_available(engine: Engine, series_id: str, as_of: date) -> list[tuple[
     )
     with engine.connect() as conn:
         return [(row.date, row.value) for row in conn.execute(query)]
+
+
+def read_observations(
+    engine: Engine, series_ids: Sequence[str], as_of: date | None = None
+) -> pd.DataFrame:
+    """Long frame (series_id, date, value, available_at) for the given series.
+
+    With ``as_of``, only what was public on that day: the point-in-time view for backtests.
+    """
+    query = select(
+        observations.c.series_id,
+        observations.c.date,
+        observations.c.value,
+        observations.c.available_at,
+    ).where(observations.c.series_id.in_(series_ids))
+    if as_of is not None:
+        query = query.where(observations.c.available_at <= as_of)
+    with engine.connect() as conn:
+        frame = pd.DataFrame(conn.execute(query.order_by(observations.c.date)).all())
+    if frame.empty:
+        return pd.DataFrame(columns=["series_id", "date", "value", "available_at"])
+    frame["date"] = pd.to_datetime(frame["date"])
+    frame["available_at"] = pd.to_datetime(frame["available_at"])
+    return frame
