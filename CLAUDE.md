@@ -125,7 +125,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 
 ## Hoja de ruta
 
-### Fase 1: bonos e inflación, desplegado (EN CURSO)
+### Fase 1: bonos e inflación, desplegado (TERMINADA)
 
 - [x] Esqueleto del repo: `requirements.txt`, `.gitignore`, `.env.example`, ruff, pytest y `ci.yml`
 - [x] `db.py`: tablas `series` y `observations` con upsert
