@@ -28,6 +28,7 @@ PAGES = [
     st.Page("views/markets.py", title="Markets"),
     st.Page("views/risk.py", title="Risk"),
     st.Page("views/news.py", title="News"),
+    st.Page("views/about.py", title="About"),
 ]
 # A bar across the top frees the sidebar's width for the charts. On narrow screens Streamlit
 # swaps it for a sidebar hidden behind a small arrow, so phones get their own row of links
