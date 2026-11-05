@@ -29,7 +29,10 @@ navigation = st.navigation(
         st.Page("views/markets.py", title="Markets"),
         st.Page("views/risk.py", title="Risk"),
         st.Page("views/news.py", title="News"),
-    ]
+    ],
+    # A bar across the top frees the sidebar's width for the charts; on narrow screens
+    # Streamlit folds it into a menu by itself
+    position="top",
 )
 
 
