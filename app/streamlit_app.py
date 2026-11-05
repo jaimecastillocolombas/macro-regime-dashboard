@@ -44,5 +44,15 @@ if status.empty:
         "on Streamlit Cloud, check the DATABASE_URL secret."
     )
     st.stop()
-st.caption(freshness_line(status, pd.Timestamp.now(tz="UTC")))
+# Phone-friendly tweaks for every page: smaller page titles and freshness line (it wraps over
+# five lines otherwise) and no Plotly toolbar on touch screens, where it stays visible over
+# the legends
+st.html(
+    "<style>"
+    "@media (max-width: 640px) {.st-key-freshness p {font-size: 0.7rem}"
+    " h1 {font-size: 1.9rem !important} h2 {font-size: 1.4rem !important}}"
+    "@media (hover: none) {.modebar-container {display: none}}"
+    "</style>"
+)
+st.container(key="freshness").caption(freshness_line(status, pd.Timestamp.now(tz="UTC")))
 navigation.run()
