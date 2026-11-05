@@ -10,5 +10,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 st.set_page_config(page_title="Macro Regime Dashboard", layout="wide")
 
-navigation = st.navigation([st.Page("views/rates.py", title="Rates & Bonds", default=True)])
+navigation = st.navigation(
+    [
+        st.Page("views/rates.py", title="Rates & Bonds", default=True),
+        st.Page("views/inflation.py", title="Inflation"),
+    ]
+)
 navigation.run()

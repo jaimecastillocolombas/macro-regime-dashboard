@@ -136,7 +136,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
   - curva actual frente a hace 1 mes y 1 año (EE. UU. y euro)
   - histórico del spread con los periodos de inversión sombreados
   - prima de riesgo
-- [ ] Página *Inflation* del dashboard:
+- [x] Página *Inflation* del dashboard:
   - general frente a subyacente para España, zona euro y EE. UU., con línea del 2 %
   - expectativas 5y5y
 - [ ] Cabecera con la fecha de la última actualización de cada fuente
