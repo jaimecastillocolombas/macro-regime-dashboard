@@ -16,6 +16,8 @@ YEARS = 10  # every time series on the panel shows the same window, so they read
 # browser window without scrolling
 CHART_HEIGHT = 200
 SPARK_MONTHS = 24  # history drawn under each key figure
+# No Plotly toolbar: on a touch screen it stays visible and covers the legends
+PLOT_CONFIG = {"displayModeBar": False}
 # Theme background is the card colour (charts are painted with it); this page sits the cards
 # on a darker canvas, the theme's secondary background
 CANVAS = {"light": "#eceef2", "dark": "#0f1116"}
@@ -30,6 +32,12 @@ st.html(
     f"background: {CANVAS[_mode]}}}"
     "[class*='st-key-card-'], [data-testid='stMetric'] {"
     f"background: {CARD[_mode]}; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08)}}"
+    # On phones Streamlit stacks every column full width; keep the key figures two per row
+    "@media (max-width: 640px) {.st-key-kpis [data-testid='stColumn']"
+    "{min-width: calc(50% - 8px)}"
+    # ...and let their labels wrap instead of ending in an ellipsis at half width
+    ".st-key-kpis [data-testid='stMetricLabel'] *, .st-key-kpis [data-testid='stMetricDelta'] *"
+    "{white-space: normal !important; text-overflow: clip}}"
     "</style>"
 )
 
@@ -76,7 +84,7 @@ def spark(values: pd.Series) -> list[float]:
 
 # ----------------------------------------------------------------------------- key figures
 
-tiles = st.columns(4)
+tiles = st.container(key="kpis").columns(4)
 with tiles[0]:
     change = round(cpi.iloc[-1] - cpi.iloc[-2], 1)
     st.metric(
@@ -125,7 +133,7 @@ with (
 ):
     lines = {"Headline": trailing(cpi, YEARS), "Core": trailing(core, YEARS)}
     figure = line_figure(lines, "", reference=TARGET, height=CHART_HEIGHT)
-    st.plotly_chart(figure, width="stretch")
+    st.plotly_chart(figure, width="stretch", config=PLOT_CONFIG)
 with right, card("Euro area yield curve", "% by maturity, AAA government bonds Â· ECB"):
     today = stored[EA_CURVE["10Y"]].index[-1]
     curves = [
@@ -136,7 +144,9 @@ with right, card("Euro area yield curve", "% by maturity, AAA government bonds Â
             color(3),
         ),
     ]
-    st.plotly_chart(curve_figure(curves, height=CHART_HEIGHT, y_title=""), width="stretch")
+    st.plotly_chart(
+        curve_figure(curves, height=CHART_HEIGHT, y_title=""), width="stretch", config=PLOT_CONFIG
+    )
 
 left, right = st.columns(2)
 with (
@@ -147,7 +157,7 @@ with (
     ),
 ):
     figure = line_figure({"ES-DE": trailing(premium, YEARS)}, "", height=CHART_HEIGHT)
-    st.plotly_chart(figure, width="stretch")
+    st.plotly_chart(figure, width="stretch", config=PLOT_CONFIG)
 with (
     right,
     card(
@@ -169,4 +179,4 @@ with (
         colors={"United States": color(1), "Euro area": color(2)},
         height=CHART_HEIGHT,
     )
-    st.plotly_chart(figure, width="stretch")
+    st.plotly_chart(figure, width="stretch", config=PLOT_CONFIG)
