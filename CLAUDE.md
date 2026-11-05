@@ -160,7 +160,8 @@ La fase 1 está terminada cuando hay una demo pública que se actualiza sola cad
   - Spread de crédito Moody's Baa-10Y (FRED `BAA10Y`, desde 1986). Se descartan los high yield de ICE BofA: FRED solo sirve 3 años
   - CISS del BCE, índice compuesto de estrés financiero de la zona euro (`CISS/D.U2.Z0Z.4F.EC.SS_CIN.IDX`; el antiguo `SS_CI` se dejó de publicar en 2025)
   - [ ] Un indicador agregado de miedo/codicia construido por nosotros a partir de los anteriores, documentado y con tests
-- **Tablón de noticias relevantes** (petición de Jaime): feed filtrado, con el sentimiento calculado por nosotros con FinBERT (`ProsusAI/finbert`), porque el sentimiento de Finnhub es de pago
+- [x] **Tablón de noticias relevantes** (petición de Jaime), página *News*: la app pide a Finnhub las noticias generales en directo (caché de 15 minutos, sin guardarlas) y las filtra por palabras clave macro en `src/ingest/finnhub.py`. La clave va en la cabecera `X-Finnhub-Token`, nunca en la URL. Necesita `FINNHUB_API_KEY` en `.env` y en los secrets de Streamlit.
+  - [ ] Sentimiento con FinBERT (`ProsusAI/finbert`), porque el de Finnhub es de pago. Pendiente: Jaime decidió esperar (dependencias `transformers` y `torch`, ~2 GB). Cuando se haga, las noticias pasarán a guardarse en una tabla para tener histórico.
 - Indicador agregado de sentimiento diario en el dashboard
 
 ### Fase 3: backtest de la estrategia de rotación por régimen

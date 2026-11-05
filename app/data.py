@@ -7,20 +7,24 @@ import streamlit as st
 from sqlalchemy import Engine
 
 from src.db import freshness, get_engine, read_observations
+from src.ingest.finnhub import fetch_news, relevant_news
+from src.ingest.http import make_session
 from src.transform.series import from_long
 
 
-def database_url() -> str | None:
-    """DATABASE_URL from the environment or, on Streamlit Cloud, from the app's secrets.
-
-    None means "not configured": src.config then falls back to the local SQLite file.
-    """
-    if url := os.getenv("DATABASE_URL"):
-        return url
+def secret(name: str) -> str | None:
+    """A setting from the environment or, on Streamlit Cloud, from the app's secrets."""
+    if value := os.getenv(name):
+        return value
     try:
-        return st.secrets.get("DATABASE_URL")
+        return st.secrets.get(name)
     except FileNotFoundError:  # no secrets file at all, the normal case locally
         return None
+
+
+def database_url() -> str | None:
+    """None means "not configured": src.config then falls back to the local SQLite file."""
+    return secret("DATABASE_URL")
 
 
 # Every cache below is keyed by the database URL, so changing the DATABASE_URL secret takes
@@ -51,3 +55,14 @@ def load(series_ids: tuple[str, ...]) -> dict[str, pd.DataFrame]:
 def source_freshness() -> pd.DataFrame:
     """Last download and latest observation per source; refreshed every 10 minutes."""
     return _freshness(database_url())
+
+
+@st.cache_data(ttl=900, show_spinner=False)
+def _news(api_key: str) -> pd.DataFrame:
+    return relevant_news(fetch_news(make_session(), api_key))
+
+
+def news() -> pd.DataFrame | None:
+    """Macro news from Finnhub, refreshed at most every 15 minutes; None without an API key."""
+    api_key = secret("FINNHUB_API_KEY")
+    return _news(api_key) if api_key else None
