@@ -49,3 +49,10 @@ def yoy(index: pd.DataFrame, months: int = 12) -> pd.DataFrame:
 def as_of(series: pd.DataFrame, when: pd.Timestamp) -> pd.DataFrame:
     """What was public on ``when``."""
     return series[series["available_at"] <= when]
+
+
+def trailing(values: pd.Series, years: int | None) -> pd.Series:
+    """The last ``years`` years up to the latest observation; everything when ``years`` is None."""
+    if years is None or values.empty:
+        return values
+    return values.loc[values.index[-1] - pd.DateOffset(years=years) :]

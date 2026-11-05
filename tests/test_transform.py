@@ -8,7 +8,7 @@ import pytest
 from src.config import FRED_SERIES
 from src.db import get_engine, read_observations, upsert_observations, upsert_series
 from src.transform.derived import build, required_inputs
-from src.transform.series import as_of, from_long, spread, yoy
+from src.transform.series import as_of, from_long, spread, trailing, yoy
 
 T = pd.Timestamp
 
@@ -102,3 +102,9 @@ def test_read_observations_point_in_time(tmp_path) -> None:
     assert len(everything) == 2
     assert list(before_release["date"]) == [T("2026-08-01")]
     assert everything["available_at"].dtype.kind == "M"
+
+
+def test_trailing_keeps_the_last_years() -> None:
+    values = pd.Series(1.0, index=pd.date_range("2016-01-01", "2026-10-01", freq="MS"))
+    assert trailing(values, 5).index[0] == T("2021-10-01")
+    assert trailing(values, None).equals(values)

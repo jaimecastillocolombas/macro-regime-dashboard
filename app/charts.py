@@ -12,6 +12,15 @@ _SERIES = {
 _SHADE = {"light": "rgba(82, 81, 78, 0.12)", "dark": "rgba(195, 194, 183, 0.12)"}
 
 
+RANGES: dict[str, int | None] = {"5Y": 5, "10Y": 10, "20Y": 20, "All": None}
+
+
+def range_control(key: str, default: str) -> int | None:
+    """Time-range selector shown above a chart; returns the years to show (None = all)."""
+    chosen = st.segmented_control("Range", list(RANGES), default=default, key=key)
+    return RANGES[chosen or "All"]  # clicking the selected option again clears it
+
+
 def _mode() -> str:
     return "dark" if st.context.theme.type == "dark" else "light"
 
@@ -23,7 +32,6 @@ def series_colors() -> list[str]:
 def _style(fig: go.Figure, y_title: str) -> go.Figure:
     fig.update_layout(
         margin={"l": 8, "r": 8, "t": 8, "b": 8},
-        height=360,
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "x": 0},
         yaxis_title=y_title,
     )
@@ -48,6 +56,7 @@ def curve_figure(curves: list[tuple[str, pd.DataFrame]]) -> go.Figure:
                 hovertemplate="%{customdata[0]}: %{y:.2f}%<extra>" + label + "</extra>",
             )
         )
+    fig.update_layout(height=360)
     fig.update_xaxes(
         type="log",
         tickvals=curves[0][1]["years"],
@@ -57,10 +66,16 @@ def curve_figure(curves: list[tuple[str, pd.DataFrame]]) -> go.Figure:
     return _style(fig, "Yield (%)")
 
 
-def spread_figure(
-    lines: dict[str, pd.Series], shaded: list[tuple[pd.Timestamp, pd.Timestamp]], y_title: str
+def line_figure(
+    lines: dict[str, pd.Series],
+    y_title: str,
+    shaded: list[tuple[pd.Timestamp, pd.Timestamp]] = (),
+    reference: float = 0.0,
+    y_range: tuple[float, float] | None = None,
+    height: int = 360,
 ) -> go.Figure:
-    """Time series on one axis with a zero line and shaded periods behind them."""
+    """Time series on one axis, a reference line (0 for spreads, 2 for inflation) and optional
+    shaded periods behind them. Pass ``y_range`` to give small multiples the same scale."""
     fig = go.Figure()
     for start, end in shaded:
         fig.add_vrect(x0=start, x1=end, fillcolor=_SHADE[_mode()], line_width=0, layer="below")
@@ -75,7 +90,11 @@ def spread_figure(
                 hovertemplate="%{y:.2f}",
             )
         )
-    fig.add_hline(y=0, line_width=1, line_color="gray")
+    fig.add_hline(
+        y=reference, line_width=1, line_dash="dot" if reference else "solid", line_color="gray"
+    )
     # A single series needs no legend: the section title names it
-    fig.update_layout(hovermode="x unified", showlegend=len(lines) > 1)
+    fig.update_layout(hovermode="x unified", showlegend=len(lines) > 1, height=height)
+    if y_range is not None:
+        fig.update_yaxes(range=list(y_range))
     return _style(fig, y_title)

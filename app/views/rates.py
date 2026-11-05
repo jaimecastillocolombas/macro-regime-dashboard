@@ -3,16 +3,16 @@
 import pandas as pd
 import streamlit as st
 
-from app.charts import curve_figure, spread_figure
+from app.charts import curve_figure, line_figure, range_control
 from app.data import load
 from src.config import EA_CURVE, US_CURVE
 from src.transform.curves import curve_on, runs_below
 from src.transform.derived import build
+from src.transform.series import trailing
 
 CURVES = {"United States (Treasuries)": US_CURVE, "Euro area (AAA)": EA_CURVE}
 SPREADS = ("T10Y2Y", "T10Y3M")
 PREMIUM = ("ES_LTR_10Y", "DE_LTR_10Y")
-RANGES = {"5Y": 5, "10Y": 10, "20Y": 20, "All": None}
 
 stored = load(tuple(sorted({*US_CURVE.values(), *EA_CURVE.values(), *SPREADS, *PREMIUM})))
 derived = build(stored, ["EA_SLOPE_10Y2Y", "EA_SLOPE_10Y3M", "ES_DE_SPREAD"])
@@ -40,13 +40,7 @@ for column, (region, curve) in zip(st.columns(2), CURVES.items(), strict=True):
 
 st.subheader("Curve slope")
 st.caption("Shaded: periods when 10Y-2Y was inverted (below zero).")
-chosen = st.segmented_control("Range", list(RANGES), default="20Y", key="slope_range")
-
-
-def since(values: pd.Series) -> pd.Series:
-    years = RANGES[chosen or "All"]
-    return values if years is None else values.loc[values.index[-1] - pd.DateOffset(years=years) :]
-
+years = range_control("slope_range", default="20Y")
 
 slopes = {
     "United States": {
@@ -59,9 +53,9 @@ slopes = {
     },
 }
 for tab, lines in zip(st.tabs(list(slopes)), slopes.values(), strict=True):
-    shown = {label: since(values) for label, values in lines.items()}
+    shown = {label: trailing(values, years) for label, values in lines.items()}
     with tab:
-        figure = spread_figure(shown, runs_below(shown["10Y-2Y"]), "Percentage points")
+        figure = line_figure(shown, "Percentage points", shaded=runs_below(shown["10Y-2Y"]))
         st.plotly_chart(figure, width="stretch")
 
 # ----------------------------------------------------------------------------- risk premium
@@ -75,5 +69,5 @@ st.metric(
     f"{premium.iloc[-1] - premium.iloc[-13]:+.0f} bp vs a year earlier",
     delta_color="inverse",
 )
-st.plotly_chart(spread_figure({"ES-DE": premium}, [], "Basis points"), width="stretch")
+st.plotly_chart(line_figure({"ES-DE": premium}, "Basis points"), width="stretch")
 st.caption("Source: ECB long-term interest rates (IRS), monthly averages of 10-year yields.")
