@@ -48,6 +48,37 @@ class SeriesSpec:
         return row
 
 
+# Yield curves: tenor -> years to maturity, and the series holding each tenor
+TENOR_YEARS: dict[str, float] = {
+    "3M": 0.25,
+    "6M": 0.5,
+    "1Y": 1,
+    "2Y": 2,
+    "5Y": 5,
+    "7Y": 7,
+    "10Y": 10,
+    "20Y": 20,
+    "30Y": 30,
+}
+US_CURVE = {
+    "3M": "DGS3MO",
+    "6M": "DGS6MO",
+    "1Y": "DGS1",
+    "2Y": "DGS2",
+    "5Y": "DGS5",
+    "7Y": "DGS7",
+    "10Y": "DGS10",
+    "20Y": "DGS20",
+    "30Y": "DGS30",
+}
+EA_CURVE = {tenor: f"EA_YC_{tenor}" for tenor in TENOR_YEARS}
+
+
+def _tenor_name(tenor: str) -> str:
+    """'3M' -> '3-month', '10Y' -> '10-year'."""
+    return f"{tenor[:-1]}-{'month' if tenor.endswith('M') else 'year'}"
+
+
 _H15 = "H.15 release: published the next business day (federalreserve.gov/releases/h15)"
 _CPI = (
     "Fallback only, before ALFRED vintages exist. Measured first-release lag of US CPI "
@@ -55,9 +86,19 @@ _CPI = (
 )
 
 FRED_SERIES: tuple[SeriesSpec, ...] = (
-    SeriesSpec("DGS3MO", "FRED", "US Treasury yield, 3-month", "percent", "daily", "US", 1, _H15),
-    SeriesSpec("DGS2", "FRED", "US Treasury yield, 2-year", "percent", "daily", "US", 1, _H15),
-    SeriesSpec("DGS10", "FRED", "US Treasury yield, 10-year", "percent", "daily", "US", 1, _H15),
+    *(
+        SeriesSpec(
+            sid,
+            "FRED",
+            f"US Treasury yield, {_tenor_name(tenor)}",
+            "percent",
+            "daily",
+            "US",
+            1,
+            _H15,
+        )
+        for tenor, sid in US_CURVE.items()
+    ),
     SeriesSpec("T10Y2Y", "FRED", "US 10Y minus 2Y spread", "percent", "daily", "US", 1, _H15),
     SeriesSpec("T10Y3M", "FRED", "US 10Y minus 3M spread", "percent", "daily", "US", 1, _H15),
     SeriesSpec(
@@ -104,35 +145,18 @@ def _ecb(series_id, key, name, unit, frequency, country, lag, note) -> SeriesSpe
 
 # HICP moved from the frozen ICP dataflow (last value Dec-2025) to HICP, provider 4D0.
 ECB_SERIES: tuple[SeriesSpec, ...] = (
-    _ecb(
-        "EA_YC_3M",
-        "YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_3M",
-        "Euro area AAA yield, 3-month",
-        "percent",
-        "daily",
-        "EA",
-        1,
-        _YC,
-    ),
-    _ecb(
-        "EA_YC_2Y",
-        "YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y",
-        "Euro area AAA yield, 2-year",
-        "percent",
-        "daily",
-        "EA",
-        1,
-        _YC,
-    ),
-    _ecb(
-        "EA_YC_10Y",
-        "YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y",
-        "Euro area AAA yield, 10-year",
-        "percent",
-        "daily",
-        "EA",
-        1,
-        _YC,
+    *(
+        _ecb(
+            sid,
+            f"YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_{tenor}",
+            f"Euro area AAA yield, {_tenor_name(tenor)}",
+            "percent",
+            "daily",
+            "EA",
+            1,
+            _YC,
+        )
+        for tenor, sid in EA_CURVE.items()
     ),
     _ecb(
         "EA_DFR",

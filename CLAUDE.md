@@ -80,12 +80,12 @@ La clave es (`series_id`, `date`) y la escritura se hace con upsert.
 Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
 
 **FRED** (`https://api.stlouisfed.org/fred/`). Requiere `FRED_API_KEY`, que es gratuita.
-- Tipos y curva: `DGS3MO`, `DGS2`, `DGS10`, `T10Y2Y`, `T10Y3M`
+- Curva del Tesoro, 9 plazos de 3M a 30Y: `DGS3MO`, `DGS6MO`, `DGS1`, `DGS2`, `DGS5`, `DGS7`, `DGS10`, `DGS20`, `DGS30`; spreads `T10Y2Y` y `T10Y3M`
 - Inflación: `CPIAUCNS` (general) y `CPILFENS` (subyacente), **sin desestacionalizar**. La tasa interanual no lo necesita y es la cifra oficial de la BLS. Las versiones desestacionalizadas (`CPIAUCSL`, `CPILFESL`) se descartaron porque el 88–91 % de su histórico se ha revisado. Son índices, así que la tasa interanual se calcula en `transform/`.
 - Expectativas de inflación: `T5YIFR` (5y5y forward)
 
 **BCE Data Portal** (`https://data-api.ecb.europa.eu/service/data/{flow}/{key}?format=csvdata`). No requiere clave.
-- Curva AAA de la zona euro: dataset `YC`, por ejemplo `YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y`, con plazos de 3M a 30Y. Se publica cada día hábil hacia las 12:00 CET.
+- Curva AAA de la zona euro: dataset `YC`, por ejemplo `YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y`, con los mismos 9 plazos que la de EE. UU. (`TENOR_YEARS` en `config.py`). Se publica cada día hábil hacia las 12:00 CET.
 - IPCA de la zona euro: `HICP/M.U2.N.000000.4D0.ANR` (general) y `HICP/M.U2.N.XEF000.4D0.ANR` (subyacente)
 - IPCA de España: `HICP/M.ES.N.000000.4D0.ANR`
 - El dataset antiguo `ICP` está congelado desde diciembre de 2025; el IPCA se publica ahora en `HICP` con proveedor `4D0`.
