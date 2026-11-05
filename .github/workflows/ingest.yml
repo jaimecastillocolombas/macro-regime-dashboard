@@ -1,0 +1,41 @@
+name: Ingest
+
+on:
+  schedule:
+    # 22:30 UTC every day: after the ECB curve (~12:00 CET) and the Fed's H.15 (~21:15 UTC).
+    # Daily rather than weekdays only, so the app's 36-hour staleness flag never fires on a
+    # normal weekend. GitHub may start a scheduled run a few minutes late.
+    - cron: "30 22 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false  # never interrupt a run that is writing to the database
+
+jobs:
+  ingest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Check secrets
+        # Without DATABASE_URL the pipeline would fall back to a throwaway SQLite file on the
+        # runner and "succeed" while writing nowhere.
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::DATABASE_URL secret is not set"; exit 1; }
+          test -n "$FRED_API_KEY" || { echo "::error::FRED_API_KEY secret is not set"; exit 1; }
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ingest
+        run: python -m src.ingest.run
