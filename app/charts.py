@@ -72,25 +72,6 @@ def curve_figure(curves: list[tuple[str, pd.DataFrame, str]]) -> go.Figure:
     return _style(fig, "Yield (%)")
 
 
-def change_figure(changes: list[tuple[str, pd.DataFrame, str]]) -> go.Figure:
-    """Grouped bars: how many basis points each tenor moved since each comparison date."""
-    fig = go.Figure()
-    for label, change, bar_color in changes:
-        fig.add_trace(
-            go.Bar(
-                x=change["tenor"],
-                y=change["change_bp"],
-                name=label,
-                marker={"color": bar_color, "cornerradius": 4},
-                hovertemplate="%{x}: %{y:+.0f} bp<extra>" + label + "</extra>",
-            )
-        )
-    fig.add_hline(y=0, line_width=1, line_color="gray")
-    fig.update_layout(height=380, barmode="group", bargap=0.25, bargroupgap=0.08)
-    fig.update_xaxes(title="Maturity")
-    return _style(fig, "Change (bp)")
-
-
 def line_figure(
     lines: dict[str, pd.Series],
     y_title: str,
@@ -99,11 +80,10 @@ def line_figure(
     y_range: tuple[float, float] | None = None,
     height: int = 360,
     colors: dict[str, str] | None = None,
-    rangeslider: bool = False,
 ) -> go.Figure:
     """Time series on one axis, a reference line (0 for spreads, 2 for inflation) and optional
-    shaded periods behind them. Pass ``y_range`` to give small multiples the same scale,
-    ``colors`` to pin a colour to each series and ``rangeslider`` for a zoom bar below."""
+    shaded periods behind them. Pass ``y_range`` to give small multiples the same scale and
+    ``colors`` to pin a colour to each series."""
     fig = go.Figure()
     for start, end in shaded:
         fig.add_vrect(x0=start, x1=end, fillcolor=_SHADE[_mode()], line_width=0, layer="below")
@@ -126,6 +106,4 @@ def line_figure(
     fig.update_layout(hovermode="x unified", showlegend=len(lines) > 1, height=height)
     if y_range is not None:
         fig.update_yaxes(range=list(y_range))
-    if rangeslider:
-        fig.update_xaxes(rangeslider={"visible": True, "thickness": 0.08})
     return _style(fig, y_title)
