@@ -143,7 +143,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
   - expectativas 5y5y
 - [x] Cabecera con la fecha de la última actualización de cada fuente
 - [x] `ingest.yml`: cron diario en UTC, posterior a la publicación del BCE, más `workflow_dispatch` para lanzarlo a mano
-- [ ] Postgres en Supabase y despliegue en Streamlit Community Cloud
+- [x] Postgres en Supabase y despliegue en Streamlit Community Cloud: https://macro-regime-dashboard-student.streamlit.app (el repo pasó a público para que Streamlit pudiera leerlo; el secreto `DATABASE_URL` se configura en Manage app > Settings > Secrets)
 - [ ] README v1: el problema, una captura, el enlace a la demo, un diagrama de arquitectura en Mermaid, las fuentes y cómo ejecutarlo en local
 - [ ] Página de inicio *Overview*, al final de la fase: solo los gráficos más importantes (inflación en España, bonos...), elegidos cuando estén todas las páginas
 
