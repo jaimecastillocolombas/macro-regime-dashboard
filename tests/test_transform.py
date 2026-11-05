@@ -8,7 +8,15 @@ import pytest
 from src.config import FRED_SERIES
 from src.db import get_engine, read_observations, upsert_observations, upsert_series
 from src.transform.derived import build, required_inputs
-from src.transform.series import as_of, from_long, percentile_rank, spread, trailing, yoy
+from src.transform.series import (
+    as_of,
+    from_long,
+    percentile_rank,
+    rebase,
+    spread,
+    trailing,
+    yoy,
+)
 
 T = pd.Timestamp
 
@@ -114,3 +122,12 @@ def test_percentile_rank_of_the_latest_value() -> None:
     history = pd.Series([10.0, 20.0, 30.0, 40.0, 25.0])
     assert percentile_rank(history) == pytest.approx(60)  # 10, 20, 25 of 5 are <= 25
     assert percentile_rank(pd.Series([1.0, 2.0, 3.0])) == pytest.approx(100)
+
+
+def test_rebase_starts_at_100_from_the_given_date() -> None:
+    values = pd.Series(
+        [50.0, 80.0, 100.0, 120.0], index=pd.date_range("2025-01-01", periods=4, freq="MS")
+    )
+    rebased = rebase(values, T("2025-02-01"))
+    assert rebased.index[0] == T("2025-02-01")
+    assert list(rebased) == pytest.approx([100.0, 125.0, 150.0])

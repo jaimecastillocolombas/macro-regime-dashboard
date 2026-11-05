@@ -152,7 +152,8 @@ La fase 1 está terminada cuando hay una demo pública que se actualiza sola cad
 ### Fase 2: mercados y noticias (EN CURSO)
 
 - Índices, divisas, materias primas y VIX desde Finnhub (plan gratuito, uso personal, unas 60 llamadas por minuto)
-  - **Bolsa de cada país** (petición de Jaime): EE. UU., España, Alemania, Francia, Italia, Reino Unido, Japón... Verificar antes qué da gratis Finnhub: es posible que los índices sean de pago y haya que usar los ETF por país (EWP, EWG, EWQ, EWI...).
+  - [x] **Bolsa de cada país** (petición de Jaime), página *Markets*: índices de cotizaciones de la OCDE en FRED (`SPASTT01{país}M661N`), mensuales y con décadas de historia, para EE. UU., España, Alemania, Francia, Italia, Reino Unido y Japón.
+    - Comprobado el 2026-11-05: el plan gratuito de Finnhub solo da la cotización actual de ETF; ni índices ("CFD indices", de pago) ni histórico (403). Stooq bloquea las descargas automáticas con una verificación anti-bots. Finnhub queda para las noticias.
 - [x] **Primas de riesgo de varios países** frente a Alemania: Italia, Francia, Portugal, Grecia, además de España. Sale del mismo dataset `IRS` del BCE que ya usamos, sin fuente nueva.
 - [x] **Métricas del miedo en bolsa** (petición de Jaime), todas gratuitas (página *Risk*, cada métrica como percentil de su histórico):
   - VIX (FRED `VIXCLS`), volatilidad implícita del S&P 500

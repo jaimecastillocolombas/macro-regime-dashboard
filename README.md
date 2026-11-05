@@ -22,6 +22,7 @@ This project solves both. Every night it collects the data, stores *when* each v
 | **Overview** | Four key figures (Spain inflation, ECB deposit rate, Spain 10-year yield, risk premium) and the four charts that sum up the picture |
 | **Rates & Bonds** | US Treasury and euro area AAA yield curves (3M to 30Y) today vs 1 month and 1 year earlier; 10Y-2Y slope with inversions shaded; Spain-Germany 10-year risk premium |
 | **Inflation** | Headline vs core for Spain, the euro area and the US against the 2% target; US 5y5y market inflation expectations |
+| **Markets** | Stock markets of the US, Spain, Germany, France, Italy, the UK and Japan: change over the last year and growth over five years on a common base |
 | **Risk** | Fear gauges (VIX, Baa credit spread, ECB CISS stress index), each placed as a percentile of its own history; 10-year risk premia over Germany for Spain, Italy, France, Portugal and Greece |
 
 A header on every page states how recent each source is and flags any source the pipeline has not refreshed for more than 36 hours.
@@ -71,7 +72,7 @@ flowchart LR
 
 | Source | Series | Frequency |
 |---|---|---|
-| [FRED](https://fred.stlouisfed.org/) (St. Louis Fed) | Treasury yields 3M-30Y, 10Y-2Y and 10Y-3M spreads, 5y5y inflation expectations, CPI and core CPI (NSA), VIX, Moody's Baa-10Y credit spread | daily / monthly |
+| [FRED](https://fred.stlouisfed.org/) (St. Louis Fed) | Treasury yields 3M-30Y, 10Y-2Y and 10Y-3M spreads, 5y5y inflation expectations, CPI and core CPI (NSA), VIX, Moody's Baa-10Y credit spread, OECD share price indices for seven countries | daily / monthly |
 | [ECB Data Portal](https://data.ecb.europa.eu/) | Euro area AAA yield curve 3M-30Y, deposit facility rate, HICP (euro area headline and core, Spain), 10-year government yields for Spain, Germany, Italy, France, Portugal and Greece, CISS systemic stress index | daily / monthly |
 | [INE](https://www.ine.es/) | Spain CPI and core CPI, annual rate (base 2025) | monthly |
 
@@ -106,5 +107,5 @@ Python 3.11 · pandas · SQLAlchemy 2 · Streamlit · Plotly · Postgres (Supaba
 ## Roadmap
 
 - **Phase 1 (done):** rates, bonds and inflation, with an overview start page, deployed and updating daily.
-- **Phase 2 (in progress):** risk premia for more euro countries and fear gauges are live; next come equity markets by country and a news board with sentiment scored by FinBERT.
+- **Phase 2 (in progress):** risk premia for more euro countries, fear gauges and equity markets by country are live; next comes a news board with sentiment scored by FinBERT.
 - **Phase 3:** a regime-rotation strategy backtested walk-forward on point-in-time data, with transaction costs and a 60/40 benchmark.

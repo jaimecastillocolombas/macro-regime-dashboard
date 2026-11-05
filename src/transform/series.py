@@ -62,3 +62,10 @@ def percentile_rank(values: pd.Series) -> float:
     """Where the latest value sits in the series' own history: the percent of observations at
     or below it (100 = the highest reading on record)."""
     return float((values <= values.iloc[-1]).mean() * 100)
+
+
+def rebase(values: pd.Series, start: pd.Timestamp, base: float = 100.0) -> pd.Series:
+    """The series from ``start`` on, scaled so its first value equals ``base``. Puts indices
+    with different levels on one chart: each line then reads as growth since ``start``."""
+    since = values.loc[start:]
+    return since / since.iloc[0] * base

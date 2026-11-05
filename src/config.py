@@ -85,6 +85,23 @@ _CPI = (
     "from the reference month start: 39-78 days, median ~44 (ALFRED, 1985-2025)."
 )
 
+_SHARES = (
+    "OECD monthly average of all listed shares. Fallback only: ALFRED gives the first release. "
+    "Observed on 2026-11-05: September published, October not yet."
+)
+
+# Equity markets by country: OECD share price indices on FRED, monthly, decades of history.
+# Index levels are free nowhere else (Finnhub's free plan has neither indices nor history).
+SHARE_PRICE_COUNTRIES = {
+    "US": "United States",
+    "ES": "Spain",
+    "DE": "Germany",
+    "FR": "France",
+    "IT": "Italy",
+    "GB": "United Kingdom",
+    "JP": "Japan",
+}
+
 FRED_SERIES: tuple[SeriesSpec, ...] = (
     *(
         SeriesSpec(
@@ -144,6 +161,19 @@ FRED_SERIES: tuple[SeriesSpec, ...] = (
         1,
         "Moody's daily yields on FRED the next business day. Chosen over ICE BofA high-yield "
         "spreads, which FRED only serves for the last 3 years.",
+    ),
+    *(
+        SeriesSpec(
+            f"SPASTT01{code}M661N",
+            "FRED",
+            f"Share prices, {country} (OECD, all shares)",
+            "index 2015=100",
+            "monthly",
+            code,
+            60,
+            _SHARES,
+        )
+        for code, country in SHARE_PRICE_COUNTRIES.items()
     ),
 )
 

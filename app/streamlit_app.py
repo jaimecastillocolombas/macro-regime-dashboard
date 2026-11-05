@@ -26,6 +26,7 @@ navigation = st.navigation(
         st.Page("views/overview.py", title="Overview", default=True),
         st.Page("views/rates.py", title="Rates & Bonds"),
         st.Page("views/inflation.py", title="Inflation"),
+        st.Page("views/markets.py", title="Markets"),
         st.Page("views/risk.py", title="Risk"),
     ]
 )
