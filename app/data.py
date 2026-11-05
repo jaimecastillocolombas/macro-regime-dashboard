@@ -58,11 +58,16 @@ def source_freshness() -> pd.DataFrame:
 
 
 @st.cache_data(ttl=900, show_spinner=False)
-def _news(api_key: str) -> pd.DataFrame:
-    return relevant_news(fetch_news(make_session(), api_key))
+def _raw_news(api_key: str) -> list[dict]:
+    # Only Finnhub's raw payload is cached. Streamlit keys the cache on this function's own
+    # source, not on what it calls, so caching relevant_news' output kept serving the old
+    # columns after the filter changed (KeyError: 'topic' on the live app).
+    return fetch_news(make_session(), api_key)
 
 
 def news() -> pd.DataFrame | None:
-    """Macro news from Finnhub, refreshed at most every 15 minutes; None without an API key."""
+    """Macro news from Finnhub, refreshed at most every 15 minutes; None without an API key.
+    Filtering and tagging are cheap and pure, so they run on every rerun with the current code.
+    """
     api_key = secret("FINNHUB_API_KEY")
-    return _news(api_key) if api_key else None
+    return relevant_news(_raw_news(api_key)) if api_key else None
