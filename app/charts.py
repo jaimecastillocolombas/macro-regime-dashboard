@@ -52,7 +52,9 @@ def _maturity_axis(fig: go.Figure, curve: pd.DataFrame) -> None:
     fig.update_xaxes(type="log", tickvals=curve["years"], ticktext=curve["tenor"], title="Maturity")
 
 
-def curve_figure(curves: list[tuple[str, pd.DataFrame, str]], height: int = 380) -> go.Figure:
+def curve_figure(
+    curves: list[tuple[str, pd.DataFrame, str]], height: int = 380, y_title: str = "Yield (%)"
+) -> go.Figure:
     """One line per (label, curve, colour), x = years to maturity on a log scale."""
     fig = go.Figure()
     for label, curve, line_color in curves:
@@ -70,7 +72,7 @@ def curve_figure(curves: list[tuple[str, pd.DataFrame, str]], height: int = 380)
         )
     fig.update_layout(height=height)
     _maturity_axis(fig, curves[0][1])
-    return _style(fig, "Yield (%)")
+    return _style(fig, y_title)
 
 
 def line_figure(
