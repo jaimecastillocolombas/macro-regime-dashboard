@@ -24,9 +24,10 @@ This project solves both. Every night it collects the data, stores *when* each v
 | **Inflation** | Headline vs core for Spain, the euro area and the US against the 2% target; US 5y5y market inflation expectations |
 | **Markets** | Stock markets of the US, Spain, Germany, France, Italy, the UK and Japan: change over the last year and growth over five years on a common base |
 | **Risk** | Fear gauges (VIX, Baa credit spread, ECB CISS stress index), each placed as a percentile of its own history; 10-year risk premia over Germany for Spain, Italy, France, Portugal and Greece |
-| **News** | The latest macro-relevant headlines (central banks, rates, inflation, bonds, the economy, markets) from Finnhub, refreshed every 15 minutes |
+| **News** | Live macro headlines from Finnhub, each tagged with its topic (central banks, inflation, bonds, Europe, economy, markets): the newest story leads with its picture, the rest follow in cards by day, with one topic filter |
+| **About** | How the pipeline works, when the latest values actually became public, and every source with its publication lag and the rule behind it, read from the series catalogue |
 
-A header on every page states how recent each source is and flags any source the pipeline has not refreshed for more than 36 hours.
+A header on every page states how recent each source is and flags any source the pipeline has not refreshed for more than 36 hours. The app works on phones too: its own page links, key figures two per row and static charts that scroll instead of zooming.
 
 ![Inflation page](docs/img/inflation.png)
 
@@ -76,7 +77,7 @@ flowchart LR
 | [FRED](https://fred.stlouisfed.org/) (St. Louis Fed) | Treasury yields 3M-30Y, 10Y-2Y and 10Y-3M spreads, 5y5y inflation expectations, CPI and core CPI (NSA), VIX, Moody's Baa-10Y credit spread, OECD share price indices for seven countries | daily / monthly |
 | [ECB Data Portal](https://data.ecb.europa.eu/) | Euro area AAA yield curve 3M-30Y, deposit facility rate, HICP (euro area headline and core, Spain), 10-year government yields for Spain, Germany, Italy, France, Portugal and Greece, CISS systemic stress index | daily / monthly |
 | [INE](https://www.ine.es/) | Spain CPI and core CPI, annual rate (base 2025) | monthly |
-| [Finnhub](https://finnhub.io/) | Market news (Reuters, CNBC), fetched live by the app, not stored | live |
+| [Finnhub](https://finnhub.io/) | Market news (Reuters, CNBC and others), fetched live by the app, not stored | live |
 
 ## Run it locally
 
@@ -89,7 +90,7 @@ python -m venv .venv
 .venv/Scripts/activate              # Windows; use `source .venv/bin/activate` on macOS/Linux
 pip install -r requirements.txt
 cp .env.example .env                # then add your FRED_API_KEY (and FINNHUB_API_KEY for news)
-python -m src.ingest.run            # ~2 minutes; loads everything into data/macro.db (SQLite)
+python -m src.ingest.run            # ~6 minutes; loads everything into data/macro.db (SQLite)
 streamlit run app/streamlit_app.py
 ```
 
@@ -109,5 +110,5 @@ Python 3.11 · pandas · SQLAlchemy 2 · Streamlit · Plotly · Postgres (Supaba
 ## Roadmap
 
 - **Phase 1 (done):** rates, bonds and inflation, with an overview start page, deployed and updating daily.
-- **Phase 2 (in progress):** risk premia for more euro countries, fear gauges, equity markets by country and a news board are live; next come a composite fear/greed indicator and news sentiment scored by FinBERT.
+- **Phase 2 (in progress):** risk premia for more euro countries, fear gauges, equity markets by country and a topic-tagged news board are live; news sentiment scored by FinBERT is next.
 - **Phase 3:** a regime-rotation strategy backtested walk-forward on point-in-time data, with transaction costs and a 60/40 benchmark.
