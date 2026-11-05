@@ -23,19 +23,31 @@ def database_url() -> str | None:
         return None
 
 
+# Every cache below is keyed by the database URL, so changing the DATABASE_URL secret takes
+# effect on the next run instead of reusing a connection (or an empty result) from before.
+
+
 @st.cache_resource
-def engine() -> Engine:
-    return get_engine(database_url())
+def _engine(url: str | None) -> Engine:
+    return get_engine(url)
 
 
 @st.cache_data(ttl=3600)
-def load(series_ids: tuple[str, ...]) -> dict[str, pd.DataFrame]:
-    """Stored series by id; refreshed at most once an hour (the data changes once a day)."""
-    long = read_observations(engine(), list(series_ids))
+def _load(series_ids: tuple[str, ...], url: str | None) -> dict[str, pd.DataFrame]:
+    long = read_observations(_engine(url), list(series_ids))
     return {series_id: from_long(long, series_id) for series_id in series_ids}
 
 
 @st.cache_data(ttl=600)
+def _freshness(url: str | None) -> pd.DataFrame:
+    return freshness(_engine(url))
+
+
+def load(series_ids: tuple[str, ...]) -> dict[str, pd.DataFrame]:
+    """Stored series by id; refreshed at most once an hour (the data changes once a day)."""
+    return _load(series_ids, database_url())
+
+
 def source_freshness() -> pd.DataFrame:
     """Last download and latest observation per source; refreshed every 10 minutes."""
-    return freshness(engine())
+    return _freshness(database_url())

@@ -142,7 +142,7 @@ Verifica cada identificador de serie contra la fuente antes de darlo por bueno.
   - general frente a subyacente para España, zona euro y EE. UU., con línea del 2 %
   - expectativas 5y5y
 - [x] Cabecera con la fecha de la última actualización de cada fuente
-- [ ] `ingest.yml`: cron diario en UTC, posterior a la publicación del BCE, más `workflow_dispatch` para lanzarlo a mano
+- [x] `ingest.yml`: cron diario en UTC, posterior a la publicación del BCE, más `workflow_dispatch` para lanzarlo a mano
 - [ ] Postgres en Supabase y despliegue en Streamlit Community Cloud
 - [ ] README v1: el problema, una captura, el enlace a la demo, un diagrama de arquitectura en Mermaid, las fuentes y cómo ejecutarlo en local
 - [ ] Página de inicio *Overview*, al final de la fase: solo los gráficos más importantes (inflación en España, bonos...), elegidos cuando estén todas las páginas
