@@ -1,5 +1,7 @@
 """Cached reads for the app. All logic lives in src/; this module only loads and caches."""
 
+import os
+
 import pandas as pd
 import streamlit as st
 from sqlalchemy import Engine
@@ -8,9 +10,22 @@ from src.db import freshness, get_engine, read_observations
 from src.transform.series import from_long
 
 
+def database_url() -> str | None:
+    """DATABASE_URL from the environment or, on Streamlit Cloud, from the app's secrets.
+
+    None means "not configured": src.config then falls back to the local SQLite file.
+    """
+    if url := os.getenv("DATABASE_URL"):
+        return url
+    try:
+        return st.secrets.get("DATABASE_URL")
+    except FileNotFoundError:  # no secrets file at all, the normal case locally
+        return None
+
+
 @st.cache_resource
 def engine() -> Engine:
-    return get_engine()
+    return get_engine(database_url())
 
 
 @st.cache_data(ttl=3600)

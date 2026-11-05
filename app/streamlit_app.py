@@ -22,5 +22,13 @@ navigation = st.navigation(
 )
 
 
-st.caption(freshness_line(source_freshness(), pd.Timestamp.now(tz="UTC")))
+status = source_freshness()
+if status.empty:
+    # Without data every page would fail with an obscure IndexError; say what is wrong instead
+    st.error(
+        "The database is empty or unreachable. Locally, run `python -m src.ingest.run`; "
+        "on Streamlit Cloud, check the DATABASE_URL secret."
+    )
+    st.stop()
+st.caption(freshness_line(status, pd.Timestamp.now(tz="UTC")))
 navigation.run()
