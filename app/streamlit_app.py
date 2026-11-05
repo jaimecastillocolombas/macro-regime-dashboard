@@ -16,7 +16,8 @@ st.set_page_config(page_title="Macro Regime Dashboard", layout="wide")
 
 navigation = st.navigation(
     [
-        st.Page("views/rates.py", title="Rates & Bonds", default=True),
+        st.Page("views/overview.py", title="Overview", default=True),
+        st.Page("views/rates.py", title="Rates & Bonds"),
         st.Page("views/inflation.py", title="Inflation"),
     ]
 )

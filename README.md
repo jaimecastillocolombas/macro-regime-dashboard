@@ -19,6 +19,7 @@ This project solves both. Every night it collects the data, stores *when* each v
 
 | Page | Contents |
 |---|---|
+| **Overview** | Four key figures (Spain inflation, ECB deposit rate, Spain 10-year yield, risk premium) and the four charts that sum up the picture |
 | **Rates & Bonds** | US Treasury and euro area AAA yield curves (3M to 30Y) today vs 1 month and 1 year earlier; 10Y-2Y slope with inversions shaded; Spain-Germany 10-year risk premium |
 | **Inflation** | Headline vs core for Spain, the euro area and the US against the 2% target; US 5y5y market inflation expectations |
 
@@ -103,6 +104,6 @@ Python 3.11 · pandas · SQLAlchemy 2 · Streamlit · Plotly · Postgres (Supaba
 
 ## Roadmap
 
-- **Phase 1 (current):** rates, bonds and inflation, deployed and updating daily. Still to come: an overview start page with the key charts.
+- **Phase 1 (done):** rates, bonds and inflation, with an overview start page, deployed and updating daily.
 - **Phase 2:** equity markets by country, risk premia for more euro countries, fear gauges (VIX, credit spreads, ECB financial stress index) and a news board with sentiment scored by FinBERT.
 - **Phase 3:** a regime-rotation strategy backtested walk-forward on point-in-time data, with transaction costs and a 60/40 benchmark.
