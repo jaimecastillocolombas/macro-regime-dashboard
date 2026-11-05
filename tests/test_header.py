@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from app.header import freshness_line
+from app.header import freshness_line, freshness_short
 
 T = pd.Timestamp
 NOW = T("2026-11-05 09:00", tz="UTC")
@@ -43,3 +43,19 @@ def test_a_source_not_downloaded_for_two_days_is_flagged() -> None:
     ecb, ine = line.split("|")
     assert ":material/warning:" in ecb and "not updated for 2 days" in ecb
     assert "warning" not in ine
+
+
+def test_short_line_gives_the_oldest_check_and_names_stale_sources() -> None:
+    rows = [
+        ("ECB", "daily", "2026-11-03 06:00", "2026-11-02"),
+        ("FRED", "daily", "2026-11-05 08:12", "2026-11-04"),
+        ("INE", "monthly", "2026-11-05 08:14", "2026-10-01"),
+    ]
+    line = freshness_short(status(rows), NOW)
+    assert line.startswith("Data checked 3 Nov 06:00 UTC")
+    assert "ECB not updated" in line and "FRED" not in line
+
+
+def test_short_line_without_stale_sources_has_no_warning() -> None:
+    rows = [("FRED", "daily", "2026-11-05 08:12", "2026-11-04")]
+    assert freshness_short(status(rows), NOW) == "Data checked 5 Nov 08:12 UTC"
